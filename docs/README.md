@@ -5,9 +5,6 @@
 
 ## フォルダ構成
 - `specs/` ：画面・機能仕様書
-- `api/` ：API 仕様書
-- `database/` ：DB スキーマ・ER 図・init.sql
-- `architecture/` ：システム構成図、CI/CD フロー など
 - `templates/` ：各種ドキュメントのテンプレート
 - `guidelines/` ：プロジェクト共通ルール／ポリシー
 
