@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// ユーザー権限（認可用）
+enum Role {
+  owner
+  manager
+  staff
+}
+
+/// 店舗ステータス
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
+
+/// ユーザーのステータス
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// 座席属性／グループ用ステータス
+enum AttributeStatus {
+  active
+  inactive
+}
+
+/// 属性グループ選択タイプ
+enum SelectionType {
+  single
+  multiple
+}
+
+/// 座席用ステータス
+enum SeatStatus {
+  active
+  inactive
+  suspended
+}
+
+/// レイアウト用ステータス
+enum LayoutStatus {
+  active
+  inactive
+}
+
+/// 店舗テーブル
+model Store {
+  id                   BigInt                  @id @default(autoincrement())
+  name                 String
+  status               StoreStatus             @default(ACTIVE)
+  createdAt            DateTime                @default(now()) @map("created_at")
+  updatedAt            DateTime                @updatedAt     @map("updated_at")
+
+  users                UserAccount[]
+  seatAttributeGroups  SeatAttributeGroup[]
+  seatAttributes       SeatAttribute[]
+  seats                Seat[]
+  layouts              Layout[]
+
+  @@map("store")
+}
+
+/// ユーザーアカウントテーブル
+model UserAccount {
+  id           BigInt     @id @default(autoincrement())
+  storeId      BigInt?    @map("store_id")
+  role         Role
+  userId       String     @map("user_id") @unique
+  username     String
+  passwordHash String     @map("password_hash")
+  status       UserStatus @default(ACTIVE) @map("status")
+  isLocked     Boolean    @default(false)    @map("is_locked")
+  createdAt    DateTime   @default(now())     @map("created_at")
+  updatedAt    DateTime   @updatedAt         @map("updated_at")
+
+  store        Store?     @relation(fields: [storeId], references: [id])
+
+  @@map("user_account")
+}
+
+/// 座席属性グループ
+model SeatAttributeGroup {
+  id             BigInt                 @id @default(autoincrement())
+  storeId        BigInt
+  name           String                 @db.VarChar(100)
+  selectionType  SelectionType
+  status         AttributeStatus        @default(active)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  store          Store                  @relation(fields: [storeId], references: [id])
+  attributes     SeatAttribute[]
+
+  @@unique([storeId, name])
+  @@map("seat_attribute_group")
+}
+
+/// 座席属性
+model SeatAttribute {
+  id           BigInt                       @id @default(autoincrement())
+  storeId      BigInt
+  groupId      BigInt
+  name         String                       @db.VarChar(100)
+  status       AttributeStatus              @default(active)
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+
+  store        Store                        @relation(fields: [storeId], references: [id])
+  group        SeatAttributeGroup          @relation(fields: [groupId], references: [id])
+  assignments  SeatAttributeAssignment[]
+
+  @@unique([storeId, groupId, name])
+  @@map("seat_attribute")
+}
+
+/// 中間テーブル: 座席⇔属性の割り当て
+model SeatAttributeAssignment {
+  seatId      BigInt
+  attributeId BigInt
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  seat        Seat                         @relation(fields: [seatId], references: [id])
+  attribute   SeatAttribute                @relation(fields: [attributeId], references: [id])
+
+  @@id([seatId, attributeId])
+  @@map("seat_attribute_assignment")
+}
+
+/// 座席テーブル
+model Seat {
+  id          BigInt                       @id @default(autoincrement())
+  storeId     BigInt
+  name        String                       @db.VarChar(50)
+  minCapacity Int                          @default(1)
+  maxCapacity Int                          @default(1)
+  status      SeatStatus                   @default(active)
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  store       Store                        @relation(fields: [storeId], references: [id])
+  attributes  SeatAttributeAssignment[]
+  layouts     LayoutSeat[]
+
+  @@unique([storeId, name])
+  @@map("seat")
+}
+
+/// レイアウト
+model Layout {
+  id         BigInt         @id @default(autoincrement())
+  storeId    BigInt
+  name       String         @db.VarChar(100)
+  status     LayoutStatus   @default(active)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  store      Store          @relation(fields: [storeId], references: [id])
+  seats      LayoutSeat[]
+
+  @@unique([storeId, name])
+  @@map("layout")
+}
+
+/// レイアウト⇔座席 の中間テーブル
+model LayoutSeat {
+  layoutId   BigInt
+  seatId     BigInt
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  layout     Layout         @relation(fields: [layoutId], references: [id])
+  seat       Seat           @relation(fields: [seatId], references: [id])
+
+  @@id([layoutId, seatId])
+  @@map("layout_seat")
+}

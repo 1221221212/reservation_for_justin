@@ -1,0 +1,299 @@
+```mermaid
+erDiagram
+    STORE ||--o{ SEAT : manages
+    STORE ||--o{ LAYOUT : manages
+    STORE ||--o{ COURSE : offers
+    STORE ||--o{ MATERIAL : stocks
+    STORE ||--o{ USERACCOUNT : employs
+    STORE ||--o{ RESERVATION : receives
+    STORE ||--o{ CLOSEDADAY : schedules
+    STORE ||--o{ LAYOUTSCHEDULEGROUP : manages
+    STORE ||--o{ SEATATTRIBUTE : belongs_to
+    STORE ||--o{ BASICSETTING : manages
+    STORE ||--o{ RESERVATIONSETTING : manages
+    STORE ||--o{ STOREINFO : has
+
+    SEATATTRIBUTEGROUP ||--o{ SEATATTRIBUTE : groups
+    SEATATTRIBUTEGROUP }o--|| STORE : belongs_to
+    SEATATTRIBUTE ||--o{ SEAT_SEATATTRIBUTE : link
+    SEAT ||--o{ SEAT_SEATATTRIBUTE : link
+
+    SEATATTRIBUTE }o--|| STORE : belongs_to
+
+    LAYOUT ||--o{ LAYOUT_SEAT : includes
+    SEAT ||--o{ LAYOUT_SEAT : included_in
+
+    LAYOUT ||--o{ LAYOUT_SCHEDULE : schedules
+    LAYOUTSCHEDULEGROUP ||--o{ LAYOUT_SCHEDULE : groups
+
+    LAYOUT ||--o{ SPECIALDATE : overrides
+
+    COURSE ||--o{ COURSE_MATERIAL : uses
+    MATERIAL ||--o{ COURSE_MATERIAL : used_by
+
+    COURSE ||--o{ COURSE_ASSIGNMENT : assigned
+    COURSE ||--o{ SPECIALCOURSE_ASSIGNMENT : special_assigned
+
+    USERACCOUNT ||--o{ RESERVATIONMEMO : writes
+    RESERVATION ||--o{ RESERVATIONMEMO : has_memo
+
+    RESERVATION ||--o{ RESERVATION_SEAT : reserves
+    SEAT ||--o{ RESERVATION_SEAT : reserved_by
+
+    RESERVATION ||--o{ NOTIFICATIONLOG : triggers
+    USERACCOUNT ||--o{ AUDITLOG : creates
+    RESERVATION ||--o{ AUDITLOG : audited_by
+    USERACCOUNT ||--o{ AUTHTOKEN : owns
+
+    CLOSEDDAYGROUP }o--|| STORE : belongs_to
+    CLOSEDDAYGROUP ||--o{ CLOSEDADAY : groups
+
+    %% Entity definitions
+
+    STORE {
+      BIGINT id PK
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    CLOSEDADAY {
+      BIGINT id PK
+      BIGINT store_id
+      ENUM type
+      TINYINT weekday
+      TINYINT day_of_month
+      TINYINT nth_week
+      TINYINT month
+      TINYINT day
+      BIGINT group_id
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SEATATTRIBUTEGROUP {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SEATATTRIBUTE {
+      BIGINT id PK
+      BIGINT store_id
+      BIGINT group_id
+      VARCHAR name
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SEAT {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      INT min_capacity
+      INT max_capacity
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SEAT_SEATATTRIBUTE {
+      BIGINT seat_id PK
+      BIGINT attribute_id PK
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    LAYOUT {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    LAYOUT_SEAT {
+      BIGINT layout_id PK
+      BIGINT seat_id PK
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    LAYOUT_SCHEDULE {
+      BIGINT layout_id PK
+      BIGINT group_id
+      TINYINT day_of_week PK
+      TIME start_time PK
+      TIME end_time
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    LAYOUTSCHEDULEGROUP {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      ENUM status
+      DATE effective_from
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    CLOSEDDAYGROUP {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      ENUM status
+      DATE effective_from
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SPECIALDATE {
+      BIGINT id PK
+      BIGINT layout_id
+      DATE date
+      TIME start_time
+      TIME end_time
+      ENUM type
+      VARCHAR description
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    COURSE {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      DECIMAL price
+      INT min_people
+      INT max_people
+      INT duration_minutes
+      TEXT description
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    MATERIAL {
+      BIGINT id PK
+      BIGINT store_id
+      VARCHAR name
+      VARCHAR unit
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    COURSE_MATERIAL {
+      BIGINT course_id PK
+      BIGINT material_id PK
+      DECIMAL quantity
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    COURSE_ASSIGNMENT {
+      BIGINT id PK
+      BIGINT course_id
+      TINYINT day_of_week
+      TIME start_time
+      TIME end_time
+      DATE effective_from
+      DATE effective_to
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    SPECIALCOURSE_ASSIGNMENT {
+      BIGINT id PK
+      BIGINT course_id
+      DATE date
+      TIME start_time
+      TIME end_time
+      ENUM type
+      ENUM status
+      VARCHAR description
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    USERACCOUNT {
+      BIGINT id PK
+      BIGINT store_id
+      ENUM role
+      VARCHAR user_id
+      VARCHAR username
+      VARCHAR password_hash
+      BOOLEAN is_locked
+      DATETIME last_login_at
+      ENUM status
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    RESERVATION {
+      BIGINT id PK
+      BIGINT store_id
+      BIGINT course_id
+      INT num_people
+      ENUM status
+      VARCHAR customer_name
+      VARCHAR customer_email
+      VARCHAR customer_phone
+      TEXT customer_memo
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    RESERVATIONMEMO {
+      BIGINT id PK
+      BIGINT reservation_id
+      BIGINT user_account_id
+      TEXT memo
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    RESERVATION_SEAT {
+      BIGINT reservation_id PK
+      BIGINT seat_id PK
+      DATE date PK
+      TIME start_time PK
+      TIME end_time
+      DATETIME created_at
+      DATETIME updated_at
+    }
+    NOTIFICATIONLOG {
+      BIGINT id PK
+      BIGINT reservation_id
+      ENUM channel
+      ENUM status
+      INT attempts
+      DATETIME last_attempt_at
+      JSON payload
+      DATETIME created_at
+    }
+    AUDITLOG {
+      BIGINT id PK
+      BIGINT user_id
+      VARCHAR action
+      VARCHAR resource
+      BIGINT resource_id
+      VARCHAR ip_address
+      VARCHAR user_agent
+      JSON details
+      DATETIME created_at
+    }
+    AUTHTOKEN {
+      BIGINT id PK
+      BIGINT user_id
+      VARCHAR token
+      ENUM type
+      DATETIME expires_at
+      DATETIME created_at
+    }
+    BASICSETTING {
+      BIGINT store_id
+    }
+    RESERVATIONSETTING {
+      BIGINT store_id
+    }
+    STOREINFO {
+      BIGINT store_id PK
+      VARCHAR address
+      VARCHAR phone
+      VARCHAR image_url
+      TEXT description
+      DATETIME created_at
+      DATETIME updated_at
+    }
+```
