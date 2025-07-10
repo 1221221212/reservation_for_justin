@@ -1,13 +1,13 @@
 // backend/src/modules/seat-attribute/seat-attribute.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient, AttributeStatus } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { CreateSeatAttributeDto } from './dto/create-seat-attribute.dto';
-
-const prisma = new PrismaClient();
+import { AttributeStatus } from '@prisma/client';
 
 @Injectable()
 export class SeatAttributeService {
+    constructor(private readonly prisma: PrismaService) { }
+
     /** 既存グループに属性を追加 */
     async create(
         storeId: number,
@@ -15,12 +15,15 @@ export class SeatAttributeService {
         dto: CreateSeatAttributeDto,
     ) {
         const id = BigInt(groupId);
-        // グループの存在確認
-        const group = await prisma.seatAttributeGroup.findUnique({ where: { id } });
-        if (!group || group.storeId !== BigInt(storeId) || group.status === AttributeStatus.inactive) {
+        const group = await this.prisma.seatAttributeGroup.findUnique({ where: { id } });
+        if (
+            !group ||
+            group.storeId !== BigInt(storeId) ||
+            group.status === AttributeStatus.inactive
+        ) {
             throw new NotFoundException(`SeatAttributeGroup not found, id: ${groupId}`);
         }
-        return prisma.seatAttribute.create({
+        return this.prisma.seatAttribute.create({
             data: {
                 storeId: BigInt(storeId),
                 groupId: id,
@@ -36,7 +39,7 @@ export class SeatAttributeService {
         attributeId: number,
     ) {
         const id = BigInt(attributeId);
-        const attribute = await prisma.seatAttribute.findUnique({ where: { id } });
+        const attribute = await this.prisma.seatAttribute.findUnique({ where: { id } });
         if (
             !attribute ||
             attribute.storeId !== BigInt(storeId) ||
@@ -45,7 +48,7 @@ export class SeatAttributeService {
         ) {
             throw new NotFoundException(`SeatAttribute not found, id: ${attributeId}`);
         }
-        return prisma.seatAttribute.update({
+        return this.prisma.seatAttribute.update({
             where: { id },
             data: { status: AttributeStatus.inactive },
         });

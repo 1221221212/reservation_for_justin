@@ -1,24 +1,28 @@
+// backend/src/modules/store/store.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { CreateStoreDto } from './dto/create-store.dto';
-
-const prisma = new PrismaClient();
 
 @Injectable()
 export class StoreService {
+    constructor(private readonly prisma: PrismaService) { }
+
+    /** 全店舗一覧取得 */
     async findAll() {
-        return prisma.store.findMany();
+        return this.prisma.store.findMany();
     }
 
+    /** 新規店舗作成 */
     async create(createStoreDto: CreateStoreDto) {
-        return prisma.store.create({
+        return this.prisma.store.create({
             data: createStoreDto,
         });
     }
 
+    /** 店舗詳細取得 */
     async findOne(storeId: number) {
-        const store = await prisma.store.findUnique({
-            where: { id: storeId },
+        const store = await this.prisma.store.findUnique({
+            where: { id: BigInt(storeId) },
         });
 
         if (!store) {

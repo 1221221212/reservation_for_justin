@@ -2,10 +2,12 @@
 import { Module } from '@nestjs/common';
 import { LayoutService } from './layout.service';
 import { LayoutController } from './layout.controller';
+import { PrismaModule } from '@/prisma-client/prisma.module';
 
 @Module({
-    controllers: [LayoutController],
-    providers: [LayoutService],
-    exports: [LayoutService],
+  imports: [PrismaModule],
+  controllers: [LayoutController],
+  providers: [LayoutService],
+  exports: [LayoutService],
 })
-export class LayoutModule { }
+export class LayoutModule {}

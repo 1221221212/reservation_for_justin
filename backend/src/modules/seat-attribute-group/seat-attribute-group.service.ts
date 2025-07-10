@@ -1,30 +1,37 @@
 // backend/src/modules/seat-attribute-group/seat-attribute-group.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient, AttributeStatus } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
+import { AttributeStatus } from '@prisma/client';
 import { CreateSeatAttributeGroupDto } from './dto/create-seat-attribute-group.dto';
-
-const prisma = new PrismaClient();
 
 @Injectable()
 export class SeatAttributeGroupService {
+    constructor(private readonly prisma: PrismaService) { }
+
     /** 指定店舗のすべてのグループと属性を取得 */
     async findAll(storeId: number) {
-        return prisma.seatAttributeGroup.findMany({
-            where: { storeId },
+        return this.prisma.seatAttributeGroup.findMany({
+            where: { storeId: BigInt(storeId) },
             include: { attributes: true },
+            orderBy: { id: 'asc' },
         });
     }
 
     /** グループと属性を一括作成 */
-    async create(storeId: number, dto: CreateSeatAttributeGroupDto) {
-        return prisma.seatAttributeGroup.create({
+    async create(
+        storeId: number,
+        dto: CreateSeatAttributeGroupDto,
+    ) {
+        return this.prisma.seatAttributeGroup.create({
             data: {
-                storeId,
+                storeId: BigInt(storeId),
                 name: dto.name,
                 selectionType: dto.selectionType,
                 attributes: {
-                    create: dto.attributes.map(attr => ({ name: attr.name, storeId })),
+                    create: dto.attributes.map(attr => ({
+                        name: attr.name,
+                        storeId: BigInt(storeId),
+                    })),
                 },
             },
             include: { attributes: true },
@@ -32,23 +39,25 @@ export class SeatAttributeGroupService {
     }
 
     /** グループとその属性を論理削除（statusをinactiveに更新） */
-    async remove(storeId: number, groupId: number) {
+    async remove(
+        storeId: number,
+        groupId: number,
+    ) {
         const id = BigInt(groupId);
         const storeIdBig = BigInt(storeId);
-        const group = await prisma.seatAttributeGroup.findUnique({ where: { id } });
+        const group = await this.prisma.seatAttributeGroup.findUnique({ where: { id } });
         if (!group || group.storeId !== storeIdBig) {
             throw new NotFoundException(`SeatAttributeGroup not found, id: ${groupId}`);
         }
         // 属性を論理削除
-        await prisma.seatAttribute.updateMany({
+        await this.prisma.seatAttribute.updateMany({
             where: { groupId: id },
             data: { status: AttributeStatus.inactive },
         });
         // グループ自体を論理削除
-        const updatedGroup = await prisma.seatAttributeGroup.update({
+        return this.prisma.seatAttributeGroup.update({
             where: { id },
             data: { status: AttributeStatus.inactive },
         });
-        return updatedGroup;
     }
 }

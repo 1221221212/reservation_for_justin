@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient, UserAccount } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
+import { UserAccount } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { TokenDto } from './dto/token.dto';
@@ -8,9 +9,10 @@ import { UserProfileDto } from './dto/user-profile.dto';
 
 @Injectable()
 export class AuthService {
-  private prisma = new PrismaClient();
-
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /** ユーザー認証 */
   async validateUser(loginDto: LoginDto): Promise<UserAccount> {
@@ -47,24 +49,23 @@ export class AuthService {
   /**
    * JWT ペイロードをもとに、ユーザー情報＋店舗許可リストを取得して返却
    */
-async getProfile(payload: { sub: string; role: string; username?: string }): Promise<UserProfileDto> {
+  async getProfile(
+    payload: { sub: string; role: string; username?: string },
+  ): Promise<UserProfileDto> {
     const userId = Number(payload.sub);
-    // storeUsers ではなく、直接 user_account.storeId を取得
     const user = await this.prisma.userAccount.findUnique({
-      where: { id: BigInt(userId) },  // Prisma が BigInt を使う場合
+      where: { id: BigInt(userId) },
       select: {
         id: true,
         username: true,
         role: true,
-        storeId: true,  // ここを取得
+        storeId: true,
       },
     });
-
     if (!user) {
       throw new NotFoundException('ユーザーが見つかりません');
     }
 
-    // owner は全店舗アクセス可（クライアントで解釈）、Manager/staff は単一の storeId
     const allowedStoreIds: number[] =
       payload.role === 'owner'
         ? []

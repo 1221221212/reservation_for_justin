@@ -1,10 +1,8 @@
 // backend/src/modules/seat/seat.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { CreateSeatDto } from './dto/create-seat.dto';
 import { SuspendSeatDto } from './dto/suspend-seat.dto';
-
-const prisma = new PrismaClient();
 
 type SeatWithAttributes = {
     id: number;
@@ -24,9 +22,11 @@ type SeatWithAttributes = {
 
 @Injectable()
 export class SeatService {
+    constructor(private readonly prisma: PrismaService) {}
+
     /** 指定店舗の全座席＋属性一覧を取得 */
     async findAll(storeId: number): Promise<SeatWithAttributes[]> {
-        const seats = await prisma.seat.findMany({
+        const seats = await this.prisma.seat.findMany({
             where: { storeId: BigInt(storeId) },
             include: {
                 attributes: {
@@ -64,7 +64,7 @@ export class SeatService {
     ): Promise<SeatWithAttributes> {
         const { name, minCapacity, maxCapacity, attributeIds } = dto;
 
-        const seat = await prisma.seat.create({
+        const seat = await this.prisma.seat.create({
             data: {
                 storeId: BigInt(storeId),
                 name,
@@ -113,7 +113,7 @@ export class SeatService {
         seatId: number,
         _dto: SuspendSeatDto
     ): Promise<{ id: number; status: 'suspended'; updatedAt: Date }> {
-        const existing = await prisma.seat.findFirst({
+        const existing = await this.prisma.seat.findFirst({
             where: { id: BigInt(seatId), storeId: BigInt(storeId) },
         });
         if (!existing) {
@@ -122,7 +122,7 @@ export class SeatService {
             );
         }
 
-        const updated = await prisma.seat.update({
+        const updated = await this.prisma.seat.update({
             where: { id: BigInt(seatId) },
             data: { status: 'suspended' },
         });

@@ -65,6 +65,8 @@ model Store {
   seatAttributes       SeatAttribute[]
   seats                Seat[]
   layouts              Layout[]
+  // スケジュールグループとのリレーション
+  layoutScheduleGroups LayoutScheduleGroup[]
 
   @@map("store")
 }
@@ -166,6 +168,7 @@ model Layout {
 
   store      Store          @relation(fields: [storeId], references: [id])
   seats      LayoutSeat[]
+  schedules  LayoutSchedule[]
 
   @@unique([storeId, name])
   @@map("layout")
@@ -183,4 +186,43 @@ model LayoutSeat {
 
   @@id([layoutId, seatId])
   @@map("layout_seat")
+}
+
+/// 週スケジュール切替用グループ
+model LayoutScheduleGroup {
+  id             BigInt               @id @default(autoincrement())
+  storeId        BigInt
+  name           String               @db.VarChar(100)
+  status         LayoutStatus         @default(active)
+  effectiveFrom  DateTime             @map("effective_from")
+  applyOnHoliday Boolean              @default(false)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt     @map("updated_at")
+
+  store          Store                @relation(fields: [storeId], references: [id])
+  schedules      LayoutSchedule[]
+
+  @@unique([storeId, name])
+  @@unique([storeId, effectiveFrom])
+  @@map("layout_schedule_group")
+}
+
+
+/// レイアウト割当：曜日・時間帯ごと
+model LayoutSchedule {
+  id         BigInt             @id @default(autoincrement())
+  groupId    BigInt
+  layoutId   BigInt
+  dayOfWeek  Int                 // 0(日)〜6(土)、7=祝日
+  startTime  DateTime   @db.Time  @map("start_time")
+  endTime    DateTime?  @db.Time  @map("end_time")
+  status     LayoutStatus       @default(active)
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt     @map("updated_at")
+
+  group      LayoutScheduleGroup @relation(fields: [groupId], references: [id])
+  layout     Layout              @relation(fields: [layoutId], references: [id])
+
+  @@index([groupId, dayOfWeek])
+  @@map("layout_schedule")
 }

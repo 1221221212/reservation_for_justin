@@ -1,34 +1,28 @@
 // backend/src/modules/user/user.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient, UserAccount, UserStatus } from '@prisma/client';
+import { PrismaService } from '@/prisma-client/prisma.service';
+import { UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-type UserWithStore = UserAccount & {
-    store: { id: bigint; name: string } | null;
-};
-
 @Injectable()
 export class UserService {
-    private prisma = new PrismaClient();
+    constructor(private readonly prisma: PrismaService) { }
 
     /** アクティブユーザー一覧取得（店舗名含む） */
-    async findAll(): Promise<UserWithStore[]> {
+    async findAll() {
         return this.prisma.userAccount.findMany({
             where: { status: UserStatus.ACTIVE },
             include: {
-                store: {
-                    select: { id: true, name: true },
-                },
+                store: { select: { id: true, name: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
     }
 
     /** 新規ユーザー作成 */
-    async create(dto: CreateUserDto): Promise<UserAccount> {
+    async create(dto: CreateUserDto) {
         const hashed = await bcrypt.hash(dto.password, 10);
         return this.prisma.userAccount.create({
             data: {
@@ -44,14 +38,16 @@ export class UserService {
     }
 
     /** ユーザー更新 */
-    async update(id: string, dto: UpdateUserDto): Promise<UserAccount> {
+    async update(id: string, dto: UpdateUserDto) {
+        const userId = BigInt(id);
         const existing = await this.prisma.userAccount.findUnique({
-            where: { id: BigInt(id) },
+            where: { id: userId },
         });
         if (!existing) {
             throw new NotFoundException('ユーザーが見つかりません');
         }
-        const data: Partial<UserAccount> = {};
+
+        const data: Partial<Parameters<typeof this.prisma.userAccount.update>[0]['data']> = {};
         if (dto.username !== undefined) data.username = dto.username;
         if (dto.password !== undefined) {
             data.passwordHash = await bcrypt.hash(dto.password, 10);
@@ -62,21 +58,22 @@ export class UserService {
         if (dto.storeId !== undefined) data.storeId = BigInt(dto.storeId);
 
         return this.prisma.userAccount.update({
-            where: { id: BigInt(id) },
+            where: { id: userId },
             data,
         });
     }
 
     /** ユーザーを非アクティブ化（論理削除） */
-    async remove(id: string): Promise<UserAccount> {
+    async remove(id: string) {
+        const userId = BigInt(id);
         const user = await this.prisma.userAccount.findUnique({
-            where: { id: BigInt(id) },
+            where: { id: userId },
         });
         if (!user) {
             throw new NotFoundException('ユーザーが見つかりません');
         }
         return this.prisma.userAccount.update({
-            where: { id: BigInt(id) },
+            where: { id: userId },
             data: { status: UserStatus.INACTIVE },
         });
     }

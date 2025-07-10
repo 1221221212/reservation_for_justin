@@ -6,7 +6,8 @@ import { UserModule } from './user/user.module';
 import { SeatAttributeGroupModule } from './seat-attribute-group/seat-attribute-group.module';
 import { SeatAttributeModule } from './seat-attribute/seat-attribute.module';
 import { SeatModule } from './seat/seat.module';
-import { LayoutModule } from './layout/layout.module';  // ← 追加
+import { LayoutModule } from './layout/layout.module';
+import { ScheduleModule } from './schedule/​schedule.module';  // ← 追加
 
 export const AppModules = [
   AuthModule,
@@ -15,6 +16,7 @@ export const AppModules = [
   SeatAttributeGroupModule,
   SeatAttributeModule,
   SeatModule,
-  LayoutModule,  // ← 追加
+  LayoutModule,
+  ScheduleModule,  // ← 追加
   // OtherModule,
 ];

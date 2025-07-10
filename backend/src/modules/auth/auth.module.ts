@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PrismaModule } from '@/prisma-client/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -20,6 +21,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             }),
             inject: [ConfigService],
         }),
+        PrismaModule,
     ],
     providers: [AuthService, JwtStrategy],
     controllers: [AuthController],

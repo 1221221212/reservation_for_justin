@@ -1,9 +1,8 @@
 // backend/src/modules/layout/layout.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { CreateLayoutDto } from './dto/create-layout.dto';
-
-const prisma = new PrismaClient();
 
 export interface LayoutWithSeats {
     id: number;
@@ -14,9 +13,12 @@ export interface LayoutWithSeats {
 
 @Injectable()
 export class LayoutService {
+    constructor(private readonly prisma: PrismaService) { }
+
     /** レイアウト一覧取得 */
     async findAll(storeId: number): Promise<LayoutWithSeats[]> {
-        const layouts = await prisma.layout.findMany({
+        // ストア存在チェックなどが必要であれば追加
+        const layouts = await this.prisma.layout.findMany({
             where: { storeId: BigInt(storeId) },
             include: {
                 seats: {
@@ -41,7 +43,8 @@ export class LayoutService {
         storeId: number,
         dto: CreateLayoutDto
     ): Promise<LayoutWithSeats> {
-        const layout = await prisma.layout.create({
+        // ストア存在チェックなどを追加可能
+        const layout = await this.prisma.layout.create({
             data: {
                 storeId: BigInt(storeId),
                 name: dto.name,
