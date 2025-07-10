@@ -1,5 +1,3 @@
-// backend/src/modules/index.ts
-
 import { AuthModule } from './auth/auth.module';
 import { StoreModule } from './store/store.module';
 import { UserModule } from './user/user.module';
@@ -7,7 +5,8 @@ import { SeatAttributeGroupModule } from './seat-attribute-group/seat-attribute-
 import { SeatAttributeModule } from './seat-attribute/seat-attribute.module';
 import { SeatModule } from './seat/seat.module';
 import { LayoutModule } from './layout/layout.module';
-import { ScheduleModule } from './schedule/​schedule.module';  // ← 追加
+import { ScheduleModule } from './schedule/​schedule.module';
+import { ClosedDayGroupModule } from './closed-day-group/closed-day-group.module';
 
 export const AppModules = [
   AuthModule,
@@ -17,6 +16,6 @@ export const AppModules = [
   SeatAttributeModule,
   SeatModule,
   LayoutModule,
-  ScheduleModule,  // ← 追加
-  // OtherModule,
+  ScheduleModule,
+  ClosedDayGroupModule,
 ];

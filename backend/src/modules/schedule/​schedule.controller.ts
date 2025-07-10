@@ -22,7 +22,7 @@ export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
   @Get()
-  @Auth({ roles: ['owner', 'manager', 'staff'] })
+  @Auth({ roles: ['owner', 'manager'] })
   @RequireStore()
   async getAll(
     @Param('storeId', ParseIntPipe) storeId: number,
@@ -31,7 +31,7 @@ export class ScheduleController {
   }
 
   @Get(':groupId')
-  @Auth({ roles: ['owner', 'manager', 'staff'] })
+  @Auth({ roles: ['owner', 'manager'] })
   @RequireStore()
   findOne(
     @Param('storeId', ParseIntPipe) storeId: number,

@@ -45,12 +45,12 @@ export const STORE_MENU: StoreMenuItem[] = [
       {
         key: 'closedDays',
         label: '定休日設定',
-        href: '/admin/store/[storeId]/business/closed-days',
+        href: '/admin/store/[storeId]/schedule/closed',
       },
       {
         key: 'specialDates',
         label: '臨時営業日／休業日設定',
-        href: '/admin/store/[storeId]/business/special-dates',
+        href: '/admin/store/[storeId]/schedule/special-dates',
       },
     ],
   },

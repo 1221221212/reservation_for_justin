@@ -52,6 +52,13 @@ enum LayoutStatus {
   inactive
 }
 
+/// 定期休業タイプ
+enum ClosedDayType {
+  WEEKLY           // 毎週 X 曜日
+  MONTHLY_DATE     // 毎月 X 日
+  MONTHLY_NTH_WEEK // 毎月第 N 週の X 曜日
+}
+
 /// 店舗テーブル
 model Store {
   id                   BigInt                  @id @default(autoincrement())
@@ -65,8 +72,8 @@ model Store {
   seatAttributes       SeatAttribute[]
   seats                Seat[]
   layouts              Layout[]
-  // スケジュールグループとのリレーション
   layoutScheduleGroups LayoutScheduleGroup[]
+  closedDayGroups      ClosedDayGroup[]        @relation("storeClosedDays")
 
   @@map("store")
 }
@@ -207,7 +214,6 @@ model LayoutScheduleGroup {
   @@map("layout_schedule_group")
 }
 
-
 /// レイアウト割当：曜日・時間帯ごと
 model LayoutSchedule {
   id         BigInt             @id @default(autoincrement())
@@ -225,4 +231,35 @@ model LayoutSchedule {
 
   @@index([groupId, dayOfWeek])
   @@map("layout_schedule")
+}
+
+/// 定期休業グループ（有効開始日で識別、同一店舗で重複不可）
+model ClosedDayGroup {
+  id             BigInt         @id @default(autoincrement())
+  storeId        BigInt
+  effectiveFrom  DateTime       @map("effective_from")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  store          Store          @relation("storeClosedDays", fields: [storeId], references: [id])
+  rules          ClosedDay[]    @relation("groupRules")
+
+  @@unique([storeId, effectiveFrom])
+  @@map("closed_day_group")
+}
+
+/// 定期休業ルール（週次／月次）
+model ClosedDay {
+  id          BigInt           @id @default(autoincrement())
+  groupId     BigInt
+  type        ClosedDayType    // WEEKLY / MONTHLY_DATE / MONTHLY_NTH_WEEK
+  dayOfWeek   Int?             // type = WEEKLY or MONTHLY_NTH_WEEK (0=日〜6=土, 7=祝日)
+  dayOfMonth  Int?             // type = MONTHLY_DATE (1–31, 99=末日)
+  weekOfMonth Int?             // type = MONTHLY_NTH_WEEK (1–5)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  group       ClosedDayGroup   @relation(fields: [groupId], references: [id], name: "groupRules")
+
+  @@map("closed_day")
 }
