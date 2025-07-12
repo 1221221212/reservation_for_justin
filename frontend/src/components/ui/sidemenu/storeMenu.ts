@@ -40,7 +40,7 @@ export const STORE_MENU: StoreMenuItem[] = [
       {
         key: 'openDays',
         label: '営業日設定',
-        href: '/admin/store/[storeId]/schedule',
+        href: '/admin/store/[storeId]/schedule/weekly',
       },
       {
         key: 'closedDays',
@@ -50,7 +50,7 @@ export const STORE_MENU: StoreMenuItem[] = [
       {
         key: 'specialDates',
         label: '臨時営業日／休業日設定',
-        href: '/admin/store/[storeId]/schedule/special-dates',
+        href: '/admin/store/[storeId]/schedule/special-day',
       },
     ],
   },

@@ -59,6 +59,12 @@ enum ClosedDayType {
   MONTHLY_NTH_WEEK // 毎月第 N 週の X 曜日
 }
 
+/// 特別営業日／休業日タイプ
+enum SpecialDayType {
+  BUSINESS  // 特別営業日
+  CLOSED    // 特別休業日
+}
+
 /// 店舗テーブル
 model Store {
   id                   BigInt                  @id @default(autoincrement())
@@ -74,6 +80,7 @@ model Store {
   layouts              Layout[]
   layoutScheduleGroups LayoutScheduleGroup[]
   closedDayGroups      ClosedDayGroup[]        @relation("storeClosedDays")
+  specialDays          SpecialDay[]            @relation("storeSpecialDays")
 
   @@map("store")
 }
@@ -176,6 +183,7 @@ model Layout {
   store      Store          @relation(fields: [storeId], references: [id])
   seats      LayoutSeat[]
   schedules  LayoutSchedule[]
+  specialDaySchedules SpecialDaySchedule[] @relation("specialDayOnLayout")
 
   @@unique([storeId, name])
   @@map("layout")
@@ -262,4 +270,39 @@ model ClosedDay {
   group       ClosedDayGroup   @relation(fields: [groupId], references: [id], name: "groupRules")
 
   @@map("closed_day")
+}
+
+/// 特定の日付の「特別日」を表すモデル
+model SpecialDay {
+  id        BigInt          @id @default(autoincrement())
+  storeId   BigInt
+  date      DateTime        @db.Date           // 対象日付（日付のみ）
+  type      SpecialDayType                     // BUSINESS or CLOSED
+  reason    String?        @db.VarChar(255)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  store     Store           @relation(fields: [storeId], references: [id], name: "storeSpecialDays")
+  schedules SpecialDaySchedule[] @relation("specialDaySchedules")
+
+
+  @@unique([storeId, date])
+  @@map("special_day")
+}
+
+/// 特別営業日の時間帯・レイアウト割当を表すモデル
+model SpecialDaySchedule {
+  id           BigInt       @id @default(autoincrement())
+  specialDayId BigInt
+  layoutId     BigInt                            // 適用レイアウト
+  startTime    DateTime      @db.Time            // 開始時刻
+  endTime      DateTime      @db.Time            // 終了時刻
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  specialDay   SpecialDay   @relation("specialDaySchedules", fields: [specialDayId], references: [id])
+  layout       Layout       @relation("specialDayOnLayout", fields: [layoutId], references: [id])
+
+  @@index([specialDayId])
+  @@map("special_day_schedule")
 }
