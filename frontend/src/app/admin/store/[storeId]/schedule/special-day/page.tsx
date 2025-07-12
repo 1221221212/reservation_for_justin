@@ -4,34 +4,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
-import TimelineGrid, {
-    BackgroundSpan,
-    TimelineItem,
-} from '@/components/ui/timeline/TimelineGrid';
+import TimelineGrid, { TimelineItem } from '@/components/ui/timeline/TimelineGrid';
 import { fetchSpecialDays } from '@/lib/special-day-api';
 import { fetchLayouts } from '@/lib/layout-api';
 import type { SpecialDay, SpecialDaySchedule } from '@/types/special-day';
 
 // SpecialDayForm と同じ色パターン
 const colorClasses = [
-    'bg-blue-400',
-    'bg-green-400',
-    'bg-yellow-400',
-    'bg-pink-400',
-    'bg-purple-400',
-    'bg-indigo-400',
-    'bg-red-400',
-    'bg-teal-400',
-    'bg-orange-400',
-    'bg-cyan-400',
+    'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-pink-400',
+    'bg-purple-400', 'bg-indigo-400', 'bg-red-400', 'bg-teal-400',
+    'bg-orange-400', 'bg-cyan-400',
 ];
 
 export default function SpecialDayListPage() {
     const { storeId } = useParams();
     const [days, setDays] = useState<SpecialDay[]>([]);
-    const [layouts, setLayouts] = useState<
-        { id: number; name: string; colorClass: string }[]
-    >([]);
+    const [layouts, setLayouts] = useState<{ id: number; name: string; colorClass: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -64,37 +52,25 @@ export default function SpecialDayListPage() {
             {days.map((day) => {
                 const title = format(new Date(day.date), 'yyyy/MM/dd (EEE)');
 
-                // —— BUSINESS のときだけ grid を出すので事前に spans/items を用意 —— 
-                const spans: BackgroundSpan[] =
-                    day.type === 'BUSINESS'
-                        ? (day.schedules ?? []).map((sch) => {
-                            const [sh, sm] = sch.startTime.split(':').map(Number);
-                            const [eh, em] = sch.endTime.split(':').map(Number);
-                            const layout = layouts.find((l) => l.id === sch.layoutId);
-                            return {
-                                rowId: 'row-1',
-                                start: sh * 2 + sm / 30,
-                                end: eh * 2 + em / 30,
-                                colorClass: layout?.colorClass ?? 'bg-gray-400',
-                            };
-                        })
-                        : [];
-
+                // BUSINESS のときだけ items を用意
                 const items: TimelineItem[] =
                     day.type === 'BUSINESS'
-                        ? (day.schedules ?? []).map((sch) => {
+                        ? (day.schedules ?? []).map((sch: SpecialDaySchedule, idx) => {
+                            // 時刻を分解
                             const [sh, sm] = sch.startTime.split(':').map(Number);
                             const [eh, em] = sch.endTime.split(':').map(Number);
+                            const start = sh * 2 + sm / 30;
+                            const end = eh * 2 + em / 30;
                             const layout = layouts.find((l) => l.id === sch.layoutId);
                             return {
                                 rowId: 'row-1',
-                                start: sh * 2 + sm / 30,
-                                end: eh * 2 + em / 30,
+                                start,
+                                end,
                                 colorClass: layout?.colorClass ?? 'bg-gray-400',
                                 content: (
                                     <div className="flex flex-col text-xs text-white overflow-hidden">
                                         <span>{`${sch.startTime}–${sch.endTime}`}</span>
-                                        <span className="truncate">{layout?.name}</span>
+                                        <span className="truncate font-medium">{layout?.name}</span>
                                     </div>
                                 ),
                             };
@@ -116,7 +92,7 @@ export default function SpecialDayListPage() {
                                 rows={[{ id: 'row-1', label: '営業時間帯' }]}
                                 subdivisions={48}
                                 rowHeight={32}
-                                backgroundSpans={spans}
+                                backgroundSpans={[]}  // 不要になったので空配列
                                 items={items}
                                 mode="view"
                             />

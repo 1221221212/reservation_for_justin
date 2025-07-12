@@ -101,3 +101,28 @@ export interface ScheduleGridProps {
     /** アイテム削除時のコールバック (edit モード) */
     onItemRemove?: (index: number) => void;
 }
+
+export interface LayoutSpan {
+    start: string;
+    end: string;
+    layoutId: number;
+}
+
+export interface SeatSpan {
+    seatId: number;
+    start: string;
+    end: string;
+}
+
+/**
+ * カレンダー＋タイムライン用の月間詳細アイテム
+ */
+export interface MonthDetail {
+    date: string;
+    isHoliday: boolean;
+    status: 'open' | 'closed';
+    appliedRuleType: 'specialDay' | 'closedDay' | 'weeklySchedule' | null;
+    appliedRuleId: number | null;
+    layoutSpans: LayoutSpan[];
+    seatSpans: SeatSpan[];
+}

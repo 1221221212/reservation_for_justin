@@ -83,7 +83,7 @@ export class ScheduleService {
         }
 
         // "HH:mm:ss" → Date オブジェクトに変換 (日付部分はダミー)
-        const toTimeDate = (t: string): Date => new Date(`1970-01-01T${t}`);
+        const toTimeDate = (t: string): Date => new Date(`1970-01-01T${t}Z`);
 
         await this.prisma.layoutScheduleGroup.create({
             data: {

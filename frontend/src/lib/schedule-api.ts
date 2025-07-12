@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import type {
     ScheduleGroupDto,
     CreateScheduleGroupDto,
+    MonthDetail,
 } from '@/types/schedule';
 
 /**
@@ -24,10 +25,7 @@ export const createScheduleGroup = async (
     storeId: number,
     payload: CreateScheduleGroupDto
 ): Promise<void> => {
-    await api.post(
-        `/store/${storeId}/schedules`,
-        payload
-    );
+    await api.post(`/store/${storeId}/schedules`, payload);
 };
 
 /**
@@ -41,4 +39,22 @@ export async function fetchScheduleGroup(
         `/store/${storeId}/schedules/${groupId}`
     );
     return res.data;
+}
+
+/**
+ * 月間スケジュール詳細を取得
+ */
+export async function fetchMonthDetail(
+    storeId: number,
+    year: number,
+    month: number
+): Promise<MonthDetail[]> {
+    // バックは { data: MonthDetail[] } で返却している想定
+    const res = await api.get<{ data: MonthDetail[] }>(
+        `/store/${storeId}/schedules/month-detail`,
+        {
+            params: { year, month },
+        }
+    );
+    return res.data.data;
 }

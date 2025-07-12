@@ -1,26 +1,26 @@
-// src/components/ui/timeline/TimelineGrid.tsx
+// frontend/src/components/ui/timeline/TimelineGrid.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
-export interface BackgroundSpan {
-    rowId: string;
-    start: number; // inclusive cell index (0–48)
-    end: number;   // exclusive cell index
-    colorClass: string;
-}
-
 export interface TimelineItem {
     rowId: string;
-    start: number; // inclusive (0–48)
-    end: number;   // exclusive
+    start: number;      // inclusive
+    end: number;        // exclusive
     content: React.ReactNode;
+    colorClass?: string; // ← 追加: アイテム固有の色クラス
+}
+
+export interface BackgroundSpan {
+    rowId: string;
+    start: number;
+    end: number;
+    colorClass: string;
 }
 
 export interface TimelineGridProps {
     rows: Array<{ id: string; label: string }>;
-    /** 分割数：24時間×2で48セル */
     subdivisions?: number;
     rowHeight: number;
     backgroundSpans?: BackgroundSpan[];
@@ -47,7 +47,6 @@ export default function TimelineGrid({
 
     const cellWidth = 100 / subdivisions;
 
-    // 完了検出
     useEffect(() => {
         const onMouseUp = () => {
             if (isSelecting && startCol !== null && endCol !== null && activeRow) {
@@ -67,7 +66,7 @@ export default function TimelineGrid({
 
     return (
         <div className="overflow-auto">
-            {/* Header: only hourly labels, left-aligned */}
+            {/* ヘッダー */}
             <div className="flex sticky top-0 bg-white z-10">
                 {Array.from({ length: subdivisions }).map((_, i) => (
                     <div
@@ -83,15 +82,12 @@ export default function TimelineGrid({
                 ))}
             </div>
 
-            {/* Rows */}
+            {/* 各行 */}
             {rows.map(row => (
                 <div key={row.id} className="mb-2">
-                    {/* Row label */}
                     <div className="mb-1 text-sm">{row.label}</div>
-
-                    {/* Grid */}
                     <div className="relative flex" style={{ height: rowHeight }}>
-                        {/* base cells */}
+                        {/* ベースセル */}
                         <div className="flex flex-1">
                             {Array.from({ length: subdivisions }).map((_, col) => (
                                 <div
@@ -117,11 +113,12 @@ export default function TimelineGrid({
                                         }
                                     }}
                                 >
-                                    {/* selection highlight */}
+                                    {/* ドラッグ選択ハイライト */}
                                     {isSelecting &&
                                         activeRow === row.id &&
                                         startCol !== null &&
-                                        endCol !== null && (() => {
+                                        endCol !== null &&
+                                        (() => {
                                             const s = Math.min(startCol, endCol);
                                             const e = Math.max(startCol, endCol);
                                             return col >= s && col <= e ? (
@@ -132,7 +129,7 @@ export default function TimelineGrid({
                             ))}
                         </div>
 
-                        {/* Background spans */}
+                        {/* BackgroundSpan（任意） */}
                         {backgroundSpans
                             .filter(span => span.rowId === row.id)
                             .map((span, idx) => (
@@ -152,7 +149,10 @@ export default function TimelineGrid({
                             .map((it, idx) => (
                                 <div
                                     key={idx}
-                                    className="absolute top-0 bottom-0 px-1 overflow-hidden cursor-pointer"
+                                    className={clsx(
+                                        'absolute top-0 bottom-0 px-1 overflow-hidden cursor-pointer',
+                                        it.colorClass
+                                    )}
                                     style={{
                                         left: `${it.start * cellWidth}%`,
                                         width: `${(it.end - it.start) * cellWidth}%`,

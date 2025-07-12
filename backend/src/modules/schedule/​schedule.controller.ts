@@ -8,18 +8,35 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { RequireStore } from '@/common/decorators/require-store.decorator';
 import { ScheduleService } from './​schedule.service';
+import { MonthScheduleService } from './month-schedule.service';
 import { CreateScheduleGroupDto } from './dto/​create-schedule-group.dto';
 import { ScheduleGroupDto } from './dto/​schedule-group.dto';
 
 @ApiTags('schedules')
 @Controller('store/:storeId/schedules')
 export class ScheduleController {
-  constructor(private readonly scheduleService: ScheduleService) {}
+  constructor(
+    private readonly scheduleService: ScheduleService,
+    private readonly monthService: MonthScheduleService,
+  ) { }
+
+  @Get('month-detail')              // ← ここを先頭に移動
+  @Auth({ roles: ['owner', 'manager'] })
+  @RequireStore()
+  async getMonthDetail(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Query('year', ParseIntPipe) year: number,
+    @Query('month', ParseIntPipe) month: number,
+  ) {
+    const data = await this.monthService.getMonthDetail(storeId, year, month - 1);
+    return { data };
+  }
 
   @Get()
   @Auth({ roles: ['owner', 'manager'] })
@@ -30,7 +47,7 @@ export class ScheduleController {
     return this.scheduleService.findAll(storeId);
   }
 
-  @Get(':groupId')
+  @Get(':groupId')                  // ← こちらは後ろへ
   @Auth({ roles: ['owner', 'manager'] })
   @RequireStore()
   findOne(

@@ -135,7 +135,7 @@ export default function ClosedDaysNewPage() {
 
             {/* 4. 月次の休み２ */}
             <section>
-                <h2 className="font-semibold mb-2">毎月第N週の定休</h2>
+                <h2 className="font-semibold mb-2">毎月N番目のX曜日の休み（第一日曜日など）</h2>
                 <table className="border-collapse w-full text-xs">
                     <thead>
                         <tr>
@@ -148,7 +148,7 @@ export default function ClosedDaysNewPage() {
                     <tbody>
                         {weeks.map(w => (
                             <tr key={w}>
-                                <td className="border p-1">第{w}週</td>
+                                <td className="border p-1">第{w}</td>
                                 {weekdays.slice(0, 7).map((_, day) => (
                                     <td key={day} className="border p-1 text-center">
                                         <input

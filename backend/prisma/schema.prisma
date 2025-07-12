@@ -56,7 +56,7 @@ enum LayoutStatus {
 enum ClosedDayType {
   WEEKLY           // 毎週 X 曜日
   MONTHLY_DATE     // 毎月 X 日
-  MONTHLY_NTH_WEEK // 毎月第 N 週の X 曜日
+  MONTHLY_NTH_WEEK // 毎月第 N  X 曜日
 }
 
 /// 特別営業日／休業日タイプ
@@ -305,4 +305,11 @@ model SpecialDaySchedule {
 
   @@index([specialDayId])
   @@map("special_day_schedule")
+}
+
+model Holiday {
+  date      DateTime @id @db.Date                   // 祝日日付（日付のみ、主キー）
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("holiday")
 }
