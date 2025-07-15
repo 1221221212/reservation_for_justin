@@ -65,6 +65,13 @@ enum SpecialDayType {
   CLOSED    // 特別休業日
 }
 
+/// 予約ステータス
+enum ReservationStatus {
+  booked
+  cancelled
+  noshow
+}
+
 /// 店舗テーブル
 model Store {
   id                   BigInt                  @id @default(autoincrement())
@@ -81,6 +88,7 @@ model Store {
   layoutScheduleGroups LayoutScheduleGroup[]
   closedDayGroups      ClosedDayGroup[]        @relation("storeClosedDays")
   specialDays          SpecialDay[]            @relation("storeSpecialDays")
+  reservations         Reservation[]           // ← 追加
 
   @@map("store")
 }
@@ -247,7 +255,7 @@ model ClosedDayGroup {
   storeId        BigInt
   effectiveFrom  DateTime       @map("effective_from")
   createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  updatedAt      DateTime       @updatedAt     @map("updated_at")
 
   store          Store          @relation("storeClosedDays", fields: [storeId], references: [id])
   rules          ClosedDay[]    @relation("groupRules")
@@ -265,7 +273,7 @@ model ClosedDay {
   dayOfMonth  Int?             // type = MONTHLY_DATE (1–31, 99=末日)
   weekOfMonth Int?             // type = MONTHLY_NTH_WEEK (1–5)
   createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  updatedAt   DateTime         @updatedAt     @map("updated_at")
 
   group       ClosedDayGroup   @relation(fields: [groupId], references: [id], name: "groupRules")
 
@@ -284,7 +292,6 @@ model SpecialDay {
 
   store     Store           @relation(fields: [storeId], references: [id], name: "storeSpecialDays")
   schedules SpecialDaySchedule[] @relation("specialDaySchedules")
-
 
   @@unique([storeId, date])
   @@map("special_day")
@@ -307,9 +314,47 @@ model SpecialDaySchedule {
   @@map("special_day_schedule")
 }
 
+/// 祝日テーブル
 model Holiday {
   date      DateTime @id @db.Date                   // 祝日日付（日付のみ、主キー）
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("holiday")
+}
+
+/// 予約テーブル
+model Reservation {
+  id               BigInt             @id @default(autoincrement())
+  storeId          BigInt             @map("store_id")
+  courseId         BigInt?            @map("course_id")
+  numPeople        Int                @map("num_people") @default(1)
+  status           ReservationStatus  @default(booked)
+  customerName     String             @map("customer_name")
+  customerEmail    String             @map("customer_email")
+  customerPhone    String?            @map("customer_phone")
+  customerMemo     String?            @map("customer_memo")
+  actionRequired   Boolean            @map("action_required") @default(false)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt         @map("updated_at")
+
+  reservationSeats ReservationSeat[]
+
+  store            Store              @relation(fields: [storeId], references: [id])
+
+  @@map("reservation")
+}
+
+/// 予約×座席（時間帯）テーブル
+model ReservationSeat {
+  reservation    Reservation @relation(fields: [reservationId], references: [id])
+  reservationId  BigInt      @map("reservation_id")
+  seatId         BigInt      @map("seat_id")
+  date           DateTime    @db.Date
+  startTime      DateTime    @db.Time   @map("start_time")
+  endTime        DateTime    @db.Time   @map("end_time")
+  createdAt      DateTime    @default(now())             @map("created_at")
+  updatedAt      DateTime    @updatedAt                 @map("updated_at")
+
+  @@id([reservationId, seatId, date, startTime])
+  @@map("reservation_seat")
 }

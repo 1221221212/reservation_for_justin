@@ -1,7 +1,7 @@
 // scripts/updateHoliday.ts
 import { PrismaClient } from '@prisma/client';
 // utils のパスは環境に応じて調整してください
-import { getHolidaySet } from '../common/utils/holidayUtil';
+import { getHolidaySet } from '../common/utils/holiday-utils';
 
 const prisma = new PrismaClient();
 

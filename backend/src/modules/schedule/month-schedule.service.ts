@@ -2,7 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma-client/prisma.service';
 
-interface DayDetail {
+export interface DayDetail {
     date: string; // YYYY-MM-DD
     isHoliday: boolean;
     status: 'closed' | 'open';

@@ -1,6 +1,6 @@
 // src/script/seedHoliday.ts
 import { PrismaClient } from '@prisma/client';
-import { getHolidaySet } from '../common/utils/holidayUtil';
+import { getHolidaySet } from '../common/utils/holiday-utils';
 
 const prisma = new PrismaClient();
 
