@@ -121,7 +121,7 @@ export const STORE_MENU: StoreMenuItem[] = [
   {
     key: 'settings',
     label: '各種設定',
-    href: '/admin/store/[storeId]/settings/info',
+    href: '/admin/store/[storeId]/settings/reservation',
     roles: ['owner', 'manager'],
     children: [
       {

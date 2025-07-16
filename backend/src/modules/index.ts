@@ -8,6 +8,7 @@ import { LayoutModule } from './layout/layout.module';
 import { ScheduleModule } from './schedule/​schedule.module';
 import { ClosedDayGroupModule } from './closed-day-group/closed-day-group.module';
 import { AvailabilityModule } from './availability/availability.module';
+import { ReservationSettingsModule } from './settings/reservation-settings.module';
 
 export const AppModules = [
   AuthModule,
@@ -20,4 +21,5 @@ export const AppModules = [
   ScheduleModule,
   ClosedDayGroupModule,
   AvailabilityModule,
+  ReservationSettingsModule,
 ];

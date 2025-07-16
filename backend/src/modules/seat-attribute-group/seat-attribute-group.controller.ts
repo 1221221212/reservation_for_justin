@@ -9,7 +9,7 @@ import { SeatAttributeService } from '../seat-attribute/seat-attribute.service';
 import { CreateSeatAttributeGroupDto } from './dto/create-seat-attribute-group.dto';
 import { CreateSeatAttributeDto } from '../seat-attribute/dto/create-seat-attribute.dto';
 
-@Controller('store/:storeId/seat-attribute-groups')
+@Controller('store/:storeId/seat-attribute')
 export class SeatAttributeGroupController {
     constructor(
         private readonly groupService: SeatAttributeGroupService,

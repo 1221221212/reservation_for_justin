@@ -13,7 +13,7 @@ import type {
  * @param storeId - 店舗ID
  */
 export const fetchAttributeGroups = (storeId: number) =>
-    api.get<AttributeGroup[]>(`/store/${storeId}/seat-attribute-groups`);
+    api.get<AttributeGroup[]>(`/store/${storeId}/seat-attribute`);
 
 /**
  * 新しい属性グループを作成します
@@ -23,7 +23,7 @@ export const fetchAttributeGroups = (storeId: number) =>
 export const createAttributeGroup = (
     storeId: number,
     params: CreateAttributeGroupParams
-) => api.post<AttributeGroup>(`/store/${storeId}/seat-attribute-groups`, params);
+) => api.post<AttributeGroup>(`/store/${storeId}/seat-attributes`, params);
 
 /**
  * 属性グループを削除します
@@ -33,7 +33,7 @@ export const createAttributeGroup = (
 export const deleteAttributeGroup = (
     storeId: number,
     groupId: number
-) => api.delete<void>(`/store/${storeId}/seat-attribute-groups/${groupId}`);
+) => api.delete<void>(`/store/${storeId}/seat-attribute/${groupId}`);
 
 /**
  * 属性を指定グループに追加します
@@ -46,7 +46,7 @@ export const addAttribute = (
     groupId: number,
     params: CreateAttributeParams
 ) => api.post<Attribute>(
-    `/store/${storeId}/seat-attribute-groups/${groupId}/attributes`,
+    `/store/${storeId}/seat-attribute/${groupId}/attributes`,
     params
 );
 
@@ -61,5 +61,5 @@ export const deleteAttribute = (
     groupId: number,
     attributeId: number
 ) => api.delete<void>(
-    `/store/${storeId}/seat-attribute-groups/${groupId}/attributes/${attributeId}`
+    `/store/${storeId}/seat-attribute/${groupId}/attributes/${attributeId}`
 );

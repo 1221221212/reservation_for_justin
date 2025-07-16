@@ -88,7 +88,8 @@ model Store {
   layoutScheduleGroups LayoutScheduleGroup[]
   closedDayGroups      ClosedDayGroup[]        @relation("storeClosedDays")
   specialDays          SpecialDay[]            @relation("storeSpecialDays")
-  reservations         Reservation[]           // ← 追加
+  reservations         Reservation[]
+  reservationSettings  ReservationSettings? 
 
   @@map("store")
 }
@@ -357,4 +358,55 @@ model ReservationSeat {
 
   @@id([reservationId, seatId, date, startTime])
   @@map("reservation_seat")
+}
+
+model ReservationSettings {
+  id                         BigInt   @id @default(autoincrement())
+  storeId                    BigInt   @unique
+  gridUnit                   Int      @default(15)   // 予約枠の刻み（分）
+  standardReservationMinutes Int      @default(60)   // 標準予約時間（分）
+
+  // 予約枠開放と締切をまとめた JSON
+  bookingWindow              Json     @default("{}") 
+  /*
+    例:
+    {
+      "open":  { "mode":"rolling", "daysBefore":30 },
+      "close": { "mode":"absolute", "daysBefore":1 }
+    }
+  */
+
+  bufferTime                 Int      @default(0)    // バッファタイム（分）
+
+  allowCourseSelection       Boolean  @default(false)
+  allowSeatSelection         Boolean  @default(false)
+
+  allowSeatCombination       Boolean  @default(false)
+  minCombinationPartySize    Int?                    // optional
+  maxCombinationSeats        Int?                    // optional
+
+  // キャンセル・変更ポリシーも JSON でまとめて管理
+  cancellationPolicy         Json?    @default("{}") 
+  /*
+    例:
+    {
+      "enabled": true,
+      "deadlineBefore": { "hoursBeforeStart":1 }
+    }
+  */
+  modificationPolicy         Json?    @default("{}")
+  /*
+    例:
+    {
+      "enabled": true,
+      "deadlineBefore": { "hoursBeforeStart":2 }
+    }
+  */
+
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  store                      Store    @relation(fields: [storeId], references: [id])
+
+  @@map("reservation_settings")
 }
