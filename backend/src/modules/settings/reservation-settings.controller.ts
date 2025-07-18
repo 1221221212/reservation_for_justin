@@ -1,28 +1,53 @@
-// backend/src/modules/settings/reservation-settings.controller.ts
-
-import { Controller, Get, Put, Param, Body, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Put, Param, Body, Query, ParseIntPipe } from '@nestjs/common';
 import { ReservationSettingsService } from './reservation-settings.service';
 import { UpdateReservationSettingsDto } from './dto/update-reservation-settings.dto';
 import { ReservationSettings } from '@prisma/client';
 
+// "次の画面" を表すレスポンスインターフェース
+interface NextStepResponse {
+    nextStep: 'course' | 'seat' | 'info';
+}
+
 @Controller('store/:storeId/settings/reservation')
 export class ReservationSettingsController {
-    constructor(private readonly service: ReservationSettingsService) { }
+    constructor(
+        private readonly settingsService: ReservationSettingsService,
+    ) { }
 
-    /** GET /v1/store/:storeId/settings/reservation */
+    /** GET /store/:storeId/settings/reservation */
     @Get()
     async getSettings(
         @Param('storeId', ParseIntPipe) storeId: number,
     ): Promise<ReservationSettings> {
-        return this.service.getByStore(BigInt(storeId));
+        return this.settingsService.getByStore(BigInt(storeId));
     }
 
-    /** PUT /v1/store/:storeId/settings/reservation */
+    /** PUT /store/:storeId/settings/reservation */
     @Put()
     async updateSettings(
         @Param('storeId', ParseIntPipe) storeId: number,
         @Body() dto: UpdateReservationSettingsDto,
     ): Promise<ReservationSettings> {
-        return this.service.update(BigInt(storeId), dto);
+        return this.settingsService.update(BigInt(storeId), dto);
+    }
+
+    /**
+     * 次の画面遷移先を返す
+     * - allowCourseSelection が true → 'course'
+     * - allowSeatSelection が true → 'seat'
+     * - 上記どちらも false → 'info'
+     */
+    @Get('next-step')
+    async getNextStep(
+        @Param('storeId', ParseIntPipe) storeId: number,
+    ): Promise<NextStepResponse> {
+        const cfg = await this.settingsService.getByStore(BigInt(storeId));
+        if (cfg.allowCourseSelection) {
+            return { nextStep: 'course' };
+        }
+        if (cfg.allowSeatSelection) {
+            return { nextStep: 'seat' };
+        }
+        return { nextStep: 'info' };
     }
 }

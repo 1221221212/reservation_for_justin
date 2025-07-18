@@ -1,24 +1,21 @@
 // backend/src/modules/availability/availability.service.ts
 
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '@/common/services/redis.service';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { SeatMatrixService } from '@/modules/schedule/seat-matrix.service';
 import { MonthScheduleService } from '@/modules/schedule/month-schedule.service';
-import { PrismaService } from '@/prisma-client/prisma.service';
-import { isCacheableDate } from '@/common/utils/date-utils';
 import { DaySummary, SeatFirstSpan } from './types';
 
 @Injectable()
 export class AvailabilityService {
     constructor(
-        private readonly redis: RedisService,
         private readonly prisma: PrismaService,
         private readonly seatMatrixService: SeatMatrixService,
         private readonly monthScheduleService: MonthScheduleService,
     ) { }
 
     /**
-     * 月間カレンダー用サマリ取得
+     * 月間カレンダー用サマリ取得（キャッシュなし・都度計算）
      * status: 'closed' | 'full' | 'available'
      */
     async getCalendar(
@@ -29,64 +26,50 @@ export class AvailabilityService {
         standardSlotMin: number,
         bufferSlots: number,
     ): Promise<DaySummary[]> {
-        // --- キャッシュキー組み立て ---
-        const monthStr = String(month + 1).padStart(2, '0');
-        const monthKeyDate = `${year}-${monthStr}-01`;
-        const cacheKey = `availability:month:${storeId}:${year}-${monthStr}` +
-            `:g${gridUnit}:s${standardSlotMin}:b${bufferSlots}`;
-
-        // --- キャッシュ取得 ---
-        if (isCacheableDate(monthKeyDate, 90)) {
-            const cached = await this.redis.get(cacheKey);
-            if (cached) {
-                return JSON.parse(cached) as DaySummary[];
-            }
-        }
-
-        // --- 実データ取得 & “full” 判定 ---
+        // 1) 月間スケジュール詳細を一度だけ取得
         const monthDetails = await this.monthScheduleService.getMonthDetail(
             Number(storeId),
             year,
             month,
         );
 
-        const summary: DaySummary[] = [];
-        for (const dd of monthDetails) {
-            if (dd.status === 'closed') {
-                summary.push({ date: dd.date, status: 'closed' });
-            } else {
-                // 空きスパンを取得 (partySize には標準スロット長を代用)
-                const seatFirst = await this.getSeatFirst(
+        // 2) 各日を並列で処理
+        const summaries = await Promise.all(
+            monthDetails.map(async (dd) => {
+                if (dd.status === 'closed') {
+                    return { date: dd.date, status: 'closed' } as DaySummary;
+                }
+
+                // 3) 日別の「フィルタ前スパン」を取得
+                const rawSpans = await this.seatMatrixService.compressToSeatFirst(
                     storeId,
-                    dd.date,
-                    standardSlotMin,
+                    new Date(dd.date),
                     gridUnit,
-                    standardSlotMin,
                     bufferSlots,
                 );
-                // いずれかの席に標準SlotMin以上の連続空きスパンがあれば available
-                const hasAny = seatFirst.some((s) =>
-                    s.spans.some((span) => {
-                        const [sh, sm] = span.start.split(':').map(Number);
-                        const [eh, em] = span.end.split(':').map(Number);
+
+                // 4) いずれかの席に standardSlotMin 分以上の連続空きがあれば available
+                const hasRoom = rawSpans.some(({ spans }) =>
+                    spans.some(({ start, end }) => {
+                        const [sh, sm] = start.split(':').map(Number);
+                        const [eh, em] = end.split(':').map(Number);
                         return (eh * 60 + em) - (sh * 60 + sm) >= standardSlotMin;
                     }),
                 );
-                summary.push({ date: dd.date, status: hasAny ? 'available' : 'full' });
-            }
-        }
 
-        // --- キャッシュ書き込み ---
-        if (isCacheableDate(monthKeyDate, 90)) {
-            await this.redis.set(cacheKey, JSON.stringify(summary), 60 * 60 * 24 * 95);
-        }
+                return {
+                    date: dd.date,
+                    status: hasRoom ? 'available' : 'full',
+                } as DaySummary;
+            }),
+        );
 
-        return summary;
+        return summaries;
     }
 
     /**
-       * 日別シートファースト可用性取得
-       */
+     * 日別シートファースト可用性取得（キャッシュなし・都度計算）
+     */
     async getSeatFirst(
         storeId: bigint,
         dateStr: string,
@@ -95,26 +78,15 @@ export class AvailabilityService {
         standardSlotMin: number,
         bufferSlots: number,
     ): Promise<SeatFirstSpan[]> {
-        const cacheKey = `availability:day:${storeId}:${dateStr}:g${gridUnit}:b${bufferSlots}`;
-        let allSpans: SeatFirstSpan[] = [];
+        // 全席の空きスパンをビルド（フィルタ前）
+        const allSpans = await this.seatMatrixService.compressToSeatFirst(
+            storeId,
+            new Date(dateStr),
+            gridUnit,
+            bufferSlots,
+        );
 
-        // キャッシュ取得
-        if (isCacheableDate(dateStr, 90)) {
-            const cached = await this.redis.get(cacheKey);
-            if (cached) allSpans = JSON.parse(cached);
-        }
-
-        // 未ヒットなら生成＆保存
-        if (allSpans.length === 0) {
-            allSpans = await this.seatMatrixService.compressToSeatFirst(
-                storeId, new Date(dateStr), gridUnit, bufferSlots,
-            );
-            if (isCacheableDate(dateStr, 90)) {
-                await this.redis.set(cacheKey, JSON.stringify(allSpans), 60 * 60 * 24 * 95);
-            }
-        }
-
-        // partySize フィルタ
+        // パーティサイズ（席容量）でフィルタ
         const seatIds = allSpans.map((s) => BigInt(s.seatId));
         const seats = await this.prisma.seat.findMany({
             where: {
