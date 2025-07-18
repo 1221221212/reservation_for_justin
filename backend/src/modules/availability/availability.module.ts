@@ -6,9 +6,14 @@ import { RedisService } from '@/common/services/redis.service';
 import { ScheduleModule } from '@/modules/schedule/​schedule.module';
 import { SeatMatrixService } from '@/modules/schedule/seat-matrix.service';
 import { MonthScheduleService } from '@/modules/schedule/month-schedule.service';
+import { ReservationSettingsModule } from '@/modules/settings/reservation-settings.module';
+
 
 @Module({
-    imports: [ScheduleModule],
+    imports: [
+        ScheduleModule,
+        ReservationSettingsModule,
+    ],
     providers: [
         AvailabilityService,
         RedisService,

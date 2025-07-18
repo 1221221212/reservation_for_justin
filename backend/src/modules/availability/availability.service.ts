@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from '@/common/services/redis.service';
 import { SeatMatrixService } from '@/modules/schedule/seat-matrix.service';
 import { MonthScheduleService } from '@/modules/schedule/month-schedule.service';
+import { PrismaService } from '@/prisma-client/prisma.service';
 import { isCacheableDate } from '@/common/utils/date-utils';
 import { DaySummary, SeatFirstSpan } from './types';
 
@@ -11,6 +12,7 @@ import { DaySummary, SeatFirstSpan } from './types';
 export class AvailabilityService {
     constructor(
         private readonly redis: RedisService,
+        private readonly prisma: PrismaService,
         private readonly seatMatrixService: SeatMatrixService,
         private readonly monthScheduleService: MonthScheduleService,
     ) { }
@@ -82,7 +84,9 @@ export class AvailabilityService {
         return summary;
     }
 
-    // --- 既存の getSeatFirst メソッドはそのまま ---
+    /**
+       * 日別シートファースト可用性取得
+       */
     async getSeatFirst(
         storeId: bigint,
         dateStr: string,
@@ -91,21 +95,38 @@ export class AvailabilityService {
         standardSlotMin: number,
         bufferSlots: number,
     ): Promise<SeatFirstSpan[]> {
-        const cacheKey = `availability:day:${storeId}:${dateStr}` +
-            `:g${gridUnit}:b${bufferSlots}`;
+        const cacheKey = `availability:day:${storeId}:${dateStr}:g${gridUnit}:b${bufferSlots}`;
+        let allSpans: SeatFirstSpan[] = [];
+
+        // キャッシュ取得
         if (isCacheableDate(dateStr, 90)) {
             const cached = await this.redis.get(cacheKey);
-            if (cached) return JSON.parse(cached);
+            if (cached) allSpans = JSON.parse(cached);
         }
-        const result = await this.seatMatrixService.compressToSeatFirst(
-            storeId,
-            new Date(dateStr),
-            gridUnit,
-            bufferSlots,
-        );
-        if (isCacheableDate(dateStr, 90)) {
-            await this.redis.set(cacheKey, JSON.stringify(result), 60 * 60 * 24 * 95);
+
+        // 未ヒットなら生成＆保存
+        if (allSpans.length === 0) {
+            allSpans = await this.seatMatrixService.compressToSeatFirst(
+                storeId, new Date(dateStr), gridUnit, bufferSlots,
+            );
+            if (isCacheableDate(dateStr, 90)) {
+                await this.redis.set(cacheKey, JSON.stringify(allSpans), 60 * 60 * 24 * 95);
+            }
         }
-        return result;
+
+        // partySize フィルタ
+        const seatIds = allSpans.map((s) => BigInt(s.seatId));
+        const seats = await this.prisma.seat.findMany({
+            where: {
+                id: { in: seatIds },
+                minCapacity: { lte: partySize },
+                maxCapacity: { gte: partySize },
+                status: 'active',
+            },
+            select: { id: true },
+        });
+        const allowed = new Set(seats.map((s) => Number(s.id)));
+
+        return allSpans.filter((s) => allowed.has(s.seatId));
     }
 }
