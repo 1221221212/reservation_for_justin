@@ -22,7 +22,7 @@ export class SpecialDayController {
     constructor(private readonly specialDayService: SpecialDayService) { }
 
     @Get()
-    @Auth({ roles: ['owner', 'manager', 'staff'] })
+    @Auth({ roles: ['OWNER', 'MANAGER', 'STAFF'] })
     @RequireStore()
     async findAll(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -31,7 +31,7 @@ export class SpecialDayController {
     }
 
     @Get(':id')
-    @Auth({ roles: ['owner', 'manager', 'staff'] })
+    @Auth({ roles: ['OWNER', 'MANAGER', 'STAFF'] })
     @RequireStore()
     async findOne(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -41,7 +41,7 @@ export class SpecialDayController {
     }
 
     @Post()
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async create(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -51,7 +51,7 @@ export class SpecialDayController {
     }
 
     @Patch(':id')
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async update(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -62,7 +62,7 @@ export class SpecialDayController {
     }
 
     @Delete(':id')
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async remove(
         @Param('storeId', ParseIntPipe) storeId: number,

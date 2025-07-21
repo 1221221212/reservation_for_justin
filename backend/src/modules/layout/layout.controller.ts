@@ -17,7 +17,7 @@ export class LayoutController {
     constructor(private readonly layoutService: LayoutService) { }
 
     @Get()
-    @Auth({ roles: ['owner', 'manager', 'staff'] })
+    @Auth({ roles: ['OWNER', 'MANAGER', 'STAFF'] })
     @RequireStore()
     async findAll(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -26,7 +26,7 @@ export class LayoutController {
     }
 
     @Post()
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async create(
         @Param('storeId', ParseIntPipe) storeId: number,

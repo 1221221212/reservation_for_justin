@@ -12,7 +12,7 @@ export class RolesGuard implements CanActivate {
     const roles = this.reflector.get<Role[]>('roles', ctx.getHandler());
     this.logger.debug('RolesGuard#canActivate', { user: req.user, rolesAllowed: roles });
 
-    if (req.user?.role === Role.owner) {
+    if (req.user?.role === Role.OWNER) {
       this.logger.debug('RolesGuard: owner bypass');
       return true;
     }

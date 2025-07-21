@@ -1,10 +1,11 @@
 // backend/src/modules/availability/availability.controller.ts
 
-import { Controller, Get, Query, ParseIntPipe, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Query, NotFoundException } from '@nestjs/common';
 import { AvailabilityService } from './availability.service';
 import { ReservationSettingsService } from '@/modules/settings/reservation-settings.service';
 import { MonthScheduleService } from '@/modules/schedule/month-schedule.service';
-import { SeatFirstSpan } from './types';
+import { GetMonthAvailabilityDto } from './dto/get-month-availability.dto';
+import { GetDayAvailabilityDto } from './dto/get-day-availability.dto';
 
 interface AvailabilityDayResponse {
     settings: {
@@ -12,8 +13,8 @@ interface AvailabilityDayResponse {
         standardReservationMinutes: number;
         bufferSlots: number;
     };
-    businessHours: Array<{ start: string; end: string }>;  // 追加
-    data: SeatFirstSpan[];
+    businessHours: Array<{ start: string; end: string }>;
+    data: Array<{ seatId: number; spans: Array<{ start: string; end: string }> }>;
 }
 
 @Controller('availability')
@@ -26,11 +27,10 @@ export class AvailabilityController {
 
     @Get('month')
     async getMonth(
-        @Query('storeId', ParseIntPipe) storeId: number,
-        @Query('year', ParseIntPipe) year: number,
-        @Query('month', ParseIntPipe) month1to12: number,
+        @Query() query: GetMonthAvailabilityDto,
     ) {
-        const monthIndex = month1to12 - 1;
+        const { storeId, year, month } = query;
+        const monthIndex = month - 1;
         const cfg = await this.settingsService.getByStore(BigInt(storeId));
         const gridUnit = cfg.gridUnit;
         const standardReservationMinutes = cfg.standardReservationMinutes;
@@ -48,17 +48,15 @@ export class AvailabilityController {
 
     @Get('day')
     async getDay(
-        @Query('storeId', ParseIntPipe) storeId: number,
-        @Query('date') date: string,
-        @Query('partySize', ParseIntPipe) partySize: number,
+        @Query() query: GetDayAvailabilityDto,
     ): Promise<AvailabilityDayResponse> {
-        // 1) 設定取得
+        const { storeId, date, partySize } = query;
+
         const cfg = await this.settingsService.getByStore(BigInt(storeId));
         const gridUnit = cfg.gridUnit;
         const standardReservationMinutes = cfg.standardReservationMinutes;
         const bufferSlots = Math.ceil(cfg.bufferTime / gridUnit);
 
-        // 2) 営業時間スパン取得
         const [year, month] = date.split('-').map(Number);
         const monthDetails = await this.monthScheduleService.getMonthDetail(
             storeId,
@@ -69,7 +67,6 @@ export class AvailabilityController {
         if (!dayDetail) throw new NotFoundException(`DayDetail for ${date} not found`);
         const businessHours = dayDetail.layoutSpans.map(({ start, end }) => ({ start, end }));
 
-        // 3) 生スパン取得
         const data = await this.availabilityService.getSeatFirst(
             BigInt(storeId),
             date,
@@ -79,7 +76,6 @@ export class AvailabilityController {
             bufferSlots,
         );
 
-        // 4) レスポンス返却
         return {
             settings: { gridUnit, standardReservationMinutes, bufferSlots },
             businessHours,

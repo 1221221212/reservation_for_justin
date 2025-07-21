@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
     useEffect(() => {
         if (isAuthenticated && user) {
             const redirectTo =
-                user.role === 'owner'
+                user.role === 'OWNER'
                     ? '/admin/owner'
                     : user.allowedStoreIds?.[0]
                         ? `/admin/store/${user.allowedStoreIds[0]}`

@@ -19,21 +19,21 @@ export class UserController {
 
     /** 全ユーザー一覧取得（オーナーのみ） */
     @Get()
-    @Auth({ roles: [Role.owner] })
+    @Auth({ roles: [Role.OWNER] })
     async findAll() {
         return this.userService.findAll();
     }
 
     /** 新規ユーザー作成（オーナーのみ） */
     @Post()
-    @Auth({ roles: [Role.owner] })
+    @Auth({ roles: [Role.OWNER] })
     async create(@Body() dto: CreateUserDto) {
         return this.userService.create(dto);
     }
 
     /** ユーザー更新（オーナーのみ） */
     @Put(':id')
-    @Auth({ roles: [Role.owner] })
+    @Auth({ roles: [Role.OWNER] })
     async update(
         @Param('id') id: string,
         @Body() dto: UpdateUserDto,
@@ -43,7 +43,7 @@ export class UserController {
 
     /** ユーザー非アクティブ化（オーナーのみ） */
     @Delete(':id')
-    @Auth({ roles: [Role.owner] })
+    @Auth({ roles: [Role.OWNER] })
     async remove(@Param('id') id: string) {
         return this.userService.remove(id);
     }

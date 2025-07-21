@@ -19,7 +19,7 @@ export class SeatAttributeService {
         if (
             !group ||
             group.storeId !== BigInt(storeId) ||
-            group.status === AttributeStatus.inactive
+            group.status === AttributeStatus.INACTIVE
         ) {
             throw new NotFoundException(`SeatAttributeGroup not found, id: ${groupId}`);
         }
@@ -44,13 +44,13 @@ export class SeatAttributeService {
             !attribute ||
             attribute.storeId !== BigInt(storeId) ||
             attribute.groupId !== BigInt(groupId) ||
-            attribute.status === AttributeStatus.inactive
+            attribute.status === AttributeStatus.INACTIVE
         ) {
             throw new NotFoundException(`SeatAttribute not found, id: ${attributeId}`);
         }
         return this.prisma.seatAttribute.update({
             where: { id },
-            data: { status: AttributeStatus.inactive },
+            data: { status: AttributeStatus.INACTIVE },
         });
     }
 }

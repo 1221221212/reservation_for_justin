@@ -7,7 +7,7 @@ import { CreateLayoutDto } from './dto/create-layout.dto';
 export interface LayoutWithSeats {
     id: number;
     name: string;
-    status: 'active' | 'inactive';
+    status: 'ACTIVE' | 'INACTIVE';
     seats: { id: number; name: string }[];
 }
 

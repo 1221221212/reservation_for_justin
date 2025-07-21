@@ -67,7 +67,7 @@ export class AuthService {
     }
 
     const allowedStoreIds: number[] =
-      payload.role === 'owner'
+      payload.role === 'OIWNER'
         ? []
         : user.storeId !== null
         ? [Number(user.storeId)]
@@ -76,7 +76,7 @@ export class AuthService {
     return {
       id: user.id.toString(),
       username: user.username,
-      role: payload.role as 'owner' | 'manager' | 'staff',
+      role: payload.role as 'OWNER' | 'MANAGER' | 'STAFF',
       allowedStoreIds,
     };
   }

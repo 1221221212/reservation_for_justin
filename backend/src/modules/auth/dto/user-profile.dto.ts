@@ -11,7 +11,7 @@ export class UserProfileDto {
   username!: string;
 
   /** ユーザーのロール ('owner' | 'manager' | 'staff') */
-  role!: 'owner' | 'manager' | 'staff';
+  role!: 'OWNER' | 'MANAGER' | 'STAFF';
 
   /** manager/staff がアクセス可能な店舗 ID のリスト (owner は全店舗許可) */
   allowedStoreIds!: number[];

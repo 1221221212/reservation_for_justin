@@ -45,7 +45,7 @@ export class SeatMatrixService {
 
         // 予約反映 (bookedのみ)
         const reservations = await this.prisma.reservationSeat.findMany({
-            where: { date, reservation: { status: 'booked' } },
+            where: { date, reservation: { status: 'BOOKED' } },
             select: { seatId: true, startTime: true, endTime: true },
         });
         const fmt = (d: Date) =>

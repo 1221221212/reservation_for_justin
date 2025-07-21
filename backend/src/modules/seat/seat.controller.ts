@@ -21,7 +21,7 @@ export class SeatController {
     constructor(private readonly seatService: SeatService) { }
 
     @Get()
-    @Auth({ roles: ['owner', 'manager', 'staff'] })
+    @Auth({ roles: ['OWNER', 'MANAGER', 'STAFF'] })
     @RequireStore()
     async findAll(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -30,7 +30,7 @@ export class SeatController {
     }
 
     @Post()
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async create(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -40,7 +40,7 @@ export class SeatController {
     }
 
     @Patch(':seatId/suspend')
-    @Auth({ roles: ['owner', 'manager'] })
+    @Auth({ roles: ['OWNER', 'MANAGER'] })
     @RequireStore()
     async suspend(
         @Param('storeId', ParseIntPipe) storeId: number,

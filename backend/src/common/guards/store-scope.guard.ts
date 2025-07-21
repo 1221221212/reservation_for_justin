@@ -11,7 +11,7 @@ export class StoreScopeGuard implements CanActivate {
         const storeIdParam = Number(req.params.storeId);
         this.logger.debug('StoreScopeGuard#canActivate', { user, storeIdParam });
 
-        if (user.role === Role.owner) {
+        if (user.role === Role.OWNER) {
             this.logger.debug('StoreScopeGuard: owner bypass');
             return true;
         }

@@ -24,7 +24,7 @@ export class ClosedDayGroupController {
 
   /** 定期休業グループ一覧取得 */
   @Get()
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   async getAll(
     @Param('storeId', ParseIntPipe) storeId: number,
@@ -34,7 +34,7 @@ export class ClosedDayGroupController {
 
   /** 定期休業グループ＋ルール一括登録 */
   @Post()
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   @HttpCode(HttpStatus.CREATED)
   async create(

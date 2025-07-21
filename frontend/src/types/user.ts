@@ -18,6 +18,6 @@ export interface CreateUserParams {
     userId: string;
     username: string;
     password: string;
-    role: 'owner' | 'manager' | 'staff';
+    role: 'OWNER' | 'MANAGER' | 'STAFF';
     storeId?: number; // owner の場合は不要
 }

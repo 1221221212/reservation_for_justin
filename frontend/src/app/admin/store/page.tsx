@@ -23,13 +23,13 @@ export default function StoreRedirectPage() {
         }
 
         // owner はオーナー画面へ
-        if (user?.role === 'owner') {
+        if (user?.role === 'OWNER') {
             router.replace('/admin/owner/store');
             return;
         }
 
         // manager/staff は許可された最初の店舗へ
-        if (user?.role === 'manager' || user?.role === 'staff') {
+        if (user?.role === 'MANAGER' || user?.role === 'STAFF') {
             const ids = user.allowedStoreIds ?? [];
             if (ids.length > 0) {
                 router.replace(`/admin/store/${ids[0]}`);

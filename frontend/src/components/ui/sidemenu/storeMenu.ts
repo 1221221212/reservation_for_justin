@@ -12,7 +12,7 @@ export const STORE_MENU: StoreMenuItem[] = [
     key: 'layout',
     label: '店舗レイアウト設定',
     href: '/admin/store/[storeId]/layout',
-    roles: ['owner', 'manager'],
+    roles: ['OWNER', 'MANAGER'],
     children: [
       {
         key: 'seatAttributes',
@@ -35,7 +35,7 @@ export const STORE_MENU: StoreMenuItem[] = [
     key: 'schedule',
     label: '営業日／休業日設定',
     href: '/admin/store/[storeId]/schedule',
-    roles: ['owner', 'manager'],
+    roles: ['OWNER', 'MANAGER'],
     children: [
       {
         key: 'openDays',
@@ -57,18 +57,13 @@ export const STORE_MENU: StoreMenuItem[] = [
   {
     key: 'course',
     label: 'コース設定',
-    href: '/admin/store/[storeId]/course',
-    roles: ['owner', 'manager'],
+    href: '/admin/store/[storeId]/course/list',
+    roles: ['OWNER', 'MANAGER'],
     children: [
       {
         key: 'courseConfig',
         label: 'コース設定',
-        href: '/admin/store/[storeId]/course',
-      },
-      {
-        key: 'ingredient',
-        label: '材料設定',
-        href: '/admin/store/[storeId]/course/materials',
+        href: '/admin/store/[storeId]/course/list',
       },
     ],
   },
@@ -76,7 +71,7 @@ export const STORE_MENU: StoreMenuItem[] = [
     key: 'reservations',
     label: '予約確認',
     href: '/admin/store/[storeId]/reservations/list',
-    roles: ['owner', 'manager', 'staff'],
+    roles: ['OWNER', 'MANAGER', 'STAFF'],
     children: [
       {
         key: 'reservationList',
@@ -104,7 +99,7 @@ export const STORE_MENU: StoreMenuItem[] = [
     key: 'reports',
     label: 'レポート',
     href: '/admin/store/[storeId]/reports/sales',
-    roles: ['owner', 'manager'],
+    roles: ['OWNER', 'MANAGER'],
     children: [
       {
         key: 'salesForecast',
@@ -122,7 +117,7 @@ export const STORE_MENU: StoreMenuItem[] = [
     key: 'settings',
     label: '各種設定',
     href: '/admin/store/[storeId]/settings/reservation',
-    roles: ['owner', 'manager'],
+    roles: ['OWNER', 'MANAGER'],
     children: [
       {
         key: 'storeInfo',

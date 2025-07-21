@@ -17,7 +17,7 @@ export default function UserListPage() {
         userId: '',
         username: '',
         password: '',
-        role: 'staff',
+        role: 'STAFF',
         storeId: '',
     });
     const [selectedStore, setSelectedStore] = useState<string>('');
@@ -37,7 +37,7 @@ export default function UserListPage() {
     // モーダルを開くとき店舗一覧取得
     const openModal = () => {
         setShowModal(true);
-        if (form.role !== 'owner') {
+        if (form.role !== 'OWNER') {
             fetchStores()
                 .then(res => setStores(res.data))
                 .catch(() => { });
@@ -51,10 +51,10 @@ export default function UserListPage() {
             username: form.username,
             password: form.password,
             role: form.role,
-            storeId: form.role === 'owner' ? undefined : Number(selectedStore),
+            storeId: form.role === 'OWNER' ? undefined : Number(selectedStore),
         });
         setShowModal(false);
-        setForm({ userId: '', username: '', password: '', role: 'staff', storeId: '' });
+        setForm({ userId: '', username: '', password: '', role: 'STAFF', storeId: '' });
         setSelectedStore('');
         fetchUsers()
             .then(res => setUsers(res.data))
@@ -138,7 +138,7 @@ export default function UserListPage() {
                                     value={form.role}
                                     onChange={e => {
                                         setForm({ ...form, role: e.target.value as CreateUserParams['role'] });
-                                        if (e.target.value === 'owner') {
+                                        if (e.target.value === 'OWNER') {
                                             setSelectedStore('');
                                         } else {
                                             fetchStores()
@@ -147,12 +147,12 @@ export default function UserListPage() {
                                         }
                                     }}
                                 >
-                                    <option value="owner">owner</option>
-                                    <option value="manager">manager</option>
-                                    <option value="staff">staff</option>
+                                    <option value="OWNER">owner</option>
+                                    <option value="MANAGER">manager</option>
+                                    <option value="STAFF">staff</option>
                                 </select>
                             </div>
-                            {form.role !== 'owner' && (
+                            {form.role !== 'OWNER' && (
                                 <div>
                                     <label className="block text-sm">店舗選択</label>
                                     {stores.map(s => (

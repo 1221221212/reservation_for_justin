@@ -15,7 +15,7 @@ export default function AdminIndexPage() {
         if (isAuthenticated && user) {
             let redirectTo: string;
 
-            if (user.role === 'owner') {
+            if (user.role === 'OWNER') {
                 // オーナーはオーナー管理画面へ
                 redirectTo = '/admin/owner';
             } else {

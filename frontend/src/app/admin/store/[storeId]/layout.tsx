@@ -28,7 +28,7 @@ export default function StoreDetailLayout({ children }: { children: ReactNode })
         // Owner 以外は allowedStoreIds に含まれないと unauthorized
         if (
             user &&
-            user.role !== 'owner' &&
+            user.role !== 'OWNER' &&
             !user.allowedStoreIds.includes(Number(storeId))
         ) {
             router.replace('/admin/unauthorized');
@@ -69,7 +69,7 @@ export default function StoreDetailLayout({ children }: { children: ReactNode })
     // 権限がない場合
     if (
         user &&
-        user.role !== 'owner' &&
+        user.role !== 'OWNER' &&
         !user.allowedStoreIds.includes(Number(storeId))
     ) {
         return <p>この店舗へのアクセス権限がありません。</p>;

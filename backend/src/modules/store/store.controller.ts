@@ -20,7 +20,7 @@ export class StoreController {
      * 新規店舗を作成（オーナーのみ）
      */
     @Post()
-    @Auth({ roles: [Role.owner] })
+    @Auth({ roles: [Role.OWNER] })
     async create(@Body() createStoreDto: CreateStoreDto) {
         return this.storeService.create(createStoreDto);
     }

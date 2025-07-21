@@ -45,7 +45,7 @@ export class ReservationService {
                             date: dateObj,
                             startTime: { lt: endTs },
                             endTime: { gt: startTs },
-                            reservation: { status: 'booked' },
+                            reservation: { status: 'BOOKED' },
                         },
                     });
                     if (conflict) {

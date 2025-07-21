@@ -77,7 +77,7 @@ export default function StoreSideMenu() {
             </ul>
 
             {/* オーナーの場合のみリンク表示 */}
-            {userRole === 'owner' && (
+            {userRole === 'OWNER' && (
                 <div className="mt-4 px-4">
                     <Link href="/admin/owner" className="text-sm text-blue-400 hover:underline">
                         オーナー管理画面へ戻る

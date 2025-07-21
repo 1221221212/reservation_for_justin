@@ -9,7 +9,7 @@ type SeatWithAttributes = {
     name: string;
     minCapacity: number;
     maxCapacity: number;
-    status: 'active' | 'inactive' | 'suspended';
+    status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
     createdAt: Date;
     updatedAt: Date;
     attributes: {
@@ -112,7 +112,7 @@ export class SeatService {
         storeId: number,
         seatId: number,
         _dto: SuspendSeatDto
-    ): Promise<{ id: number; status: 'suspended'; updatedAt: Date }> {
+    ): Promise<{ id: number; status: 'SUSPENDED'; updatedAt: Date }> {
         const existing = await this.prisma.seat.findFirst({
             where: { id: BigInt(seatId), storeId: BigInt(storeId) },
         });
@@ -124,12 +124,12 @@ export class SeatService {
 
         const updated = await this.prisma.seat.update({
             where: { id: BigInt(seatId) },
-            data: { status: 'suspended' },
+            data: { status: 'SUSPENDED' },
         });
 
         return {
             id: Number(updated.id),
-            status: 'suspended',
+            status: 'SUSPENDED',
             updatedAt: updated.updatedAt,
         };
     }

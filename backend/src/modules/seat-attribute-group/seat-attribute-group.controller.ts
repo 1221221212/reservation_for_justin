@@ -18,7 +18,7 @@ export class SeatAttributeGroupController {
 
     /** 全グループ＋属性一覧取得 */
     @Get()
-    @Auth({ roles: [Role.owner, Role.manager, Role.staff] })
+    @Auth({ roles: [Role.OWNER, Role.MANAGER, Role.STAFF] })
     @RequireStore()
     async findAll(
         @Param('storeId', ParseIntPipe) storeId: number
@@ -28,7 +28,7 @@ export class SeatAttributeGroupController {
 
     /** グループ＋属性一括作成 */
     @Post()
-    @Auth({ roles: [Role.owner, Role.manager] })
+    @Auth({ roles: [Role.OWNER, Role.MANAGER] })
     @RequireStore()
     async createGroup(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -39,7 +39,7 @@ export class SeatAttributeGroupController {
 
     /** グループ＋属性論理削除 */
     @Delete(':groupId')
-    @Auth({ roles: [Role.owner, Role.manager] })
+    @Auth({ roles: [Role.OWNER, Role.MANAGER] })
     @RequireStore()
     async removeGroup(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -50,7 +50,7 @@ export class SeatAttributeGroupController {
 
     /** 既存グループに属性追加 */
     @Post(':groupId/attributes')
-    @Auth({ roles: [Role.owner, Role.manager] })
+    @Auth({ roles: [Role.OWNER, Role.MANAGER] })
     @RequireStore()
     async addAttribute(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -62,7 +62,7 @@ export class SeatAttributeGroupController {
 
     /** グループ内の特定属性論理削除 */
     @Delete(':groupId/attributes/:attributeId')
-    @Auth({ roles: [Role.owner, Role.manager] })
+    @Auth({ roles: [Role.OWNER, Role.MANAGER] })
     @RequireStore()
     async removeAttribute(
         @Param('storeId', ParseIntPipe) storeId: number,

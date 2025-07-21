@@ -93,7 +93,7 @@ export class AvailabilityService {
                 id: { in: seatIds },
                 minCapacity: { lte: partySize },
                 maxCapacity: { gte: partySize },
-                status: 'active',
+                status: 'ACTIVE',
             },
             select: { id: true },
         });

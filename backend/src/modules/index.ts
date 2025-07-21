@@ -9,6 +9,7 @@ import { ScheduleModule } from './schedule/​schedule.module';
 import { ClosedDayGroupModule } from './closed-day-group/closed-day-group.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { ReservationModule } from './reservation/reservation.module';
+import { CourseModule } from './course/course.module';
 import { ReservationSettingsModule } from './settings/reservation-settings.module';
 
 export const AppModules = [
@@ -23,5 +24,6 @@ export const AppModules = [
   ClosedDayGroupModule,
   AvailabilityModule,
   ReservationModule,
+  CourseModule,
   ReservationSettingsModule,
 ];

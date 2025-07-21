@@ -10,7 +10,7 @@ export default function OwnerWrapper({
   children: ReactNode;
 }) {
   return (
-    <ProtectedRoute roles={['owner']}>
+    <ProtectedRoute roles={['OWNER']}>
       {/* OwnerLayout 内部で useAuth() からユーザー名を取得 */}
       <OwnerLayout>
         {children}

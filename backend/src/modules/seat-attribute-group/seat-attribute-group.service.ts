@@ -52,12 +52,12 @@ export class SeatAttributeGroupService {
         // 属性を論理削除
         await this.prisma.seatAttribute.updateMany({
             where: { groupId: id },
-            data: { status: AttributeStatus.inactive },
+            data: { status: AttributeStatus.INACTIVE },
         });
         // グループ自体を論理削除
         return this.prisma.seatAttributeGroup.update({
             where: { id },
-            data: { status: AttributeStatus.inactive },
+            data: { status: AttributeStatus.INACTIVE },
         });
     }
 }

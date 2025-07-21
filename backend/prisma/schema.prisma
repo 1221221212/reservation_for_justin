@@ -9,9 +9,9 @@ datasource db {
 
 /// ユーザー権限（認可用）
 enum Role {
-  owner
-  manager
-  staff
+  OWNER
+  MANAGER
+  STAFF
 }
 
 /// 店舗ステータス
@@ -29,47 +29,58 @@ enum UserStatus {
 
 /// 座席属性／グループ用ステータス
 enum AttributeStatus {
-  active
-  inactive
+  ACTIVE
+  INACTIVE
 }
 
 /// 属性グループ選択タイプ
 enum SelectionType {
-  single
-  multiple
+  SINGLE
+  MULTIPLE
 }
 
 /// 座席用ステータス
 enum SeatStatus {
-  active
-  inactive
-  suspended
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 /// レイアウト用ステータス
 enum LayoutStatus {
-  active
-  inactive
+  ACTIVE
+  INACTIVE
 }
 
 /// 定期休業タイプ
 enum ClosedDayType {
-  WEEKLY           // 毎週 X 曜日
-  MONTHLY_DATE     // 毎月 X 日
-  MONTHLY_NTH_WEEK // 毎月第 N  X 曜日
+  WEEKLY
+  MONTHLY_DATE
+  MONTHLY_NTH_WEEK
 }
 
 /// 特別営業日／休業日タイプ
 enum SpecialDayType {
-  BUSINESS  // 特別営業日
-  CLOSED    // 特別休業日
+  BUSINESS
+  CLOSED
 }
 
 /// 予約ステータス
 enum ReservationStatus {
-  booked
-  cancelled
-  noshow
+  BOOKED
+  CANCELLED
+  NOSHOW
+}
+
+enum CourseStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SpecialScheduleType {
+  OPEN
+  CLOSED
 }
 
 /// 店舗テーブル
@@ -80,16 +91,17 @@ model Store {
   createdAt            DateTime                @default(now()) @map("created_at")
   updatedAt            DateTime                @updatedAt     @map("updated_at")
 
-  users                UserAccount[]
-  seatAttributeGroups  SeatAttributeGroup[]
-  seatAttributes       SeatAttribute[]
-  seats                Seat[]
-  layouts              Layout[]
-  layoutScheduleGroups LayoutScheduleGroup[]
+  users                UserAccount[]           @relation("Store_to_Users")
+  seatAttributeGroups  SeatAttributeGroup[]    @relation("Store_to_SeatAttributeGroups")
+  seatAttributes       SeatAttribute[]         @relation("Store_to_SeatAttributes")
+  seats                Seat[]                  @relation("Store_to_Seats")
+  layouts              Layout[]                @relation("Store_to_Layouts")
+  layoutScheduleGroups LayoutScheduleGroup[]   @relation("Store_to_LayoutScheduleGroups")
   closedDayGroups      ClosedDayGroup[]        @relation("storeClosedDays")
   specialDays          SpecialDay[]            @relation("storeSpecialDays")
-  reservations         Reservation[]
-  reservationSettings  ReservationSettings? 
+  reservations         Reservation[]           @relation("Store_to_Reservations")
+  courses              Course[]                @relation("Store_to_Courses")
+  reservationSettings  ReservationSettings?    @relation("Store_to_ReservationSettings")
 
   @@map("store")
 }
@@ -107,23 +119,23 @@ model UserAccount {
   createdAt    DateTime   @default(now())     @map("created_at")
   updatedAt    DateTime   @updatedAt         @map("updated_at")
 
-  store        Store?     @relation(fields: [storeId], references: [id])
+  store        Store?     @relation("Store_to_Users", fields: [storeId], references: [id])
 
   @@map("user_account")
 }
 
 /// 座席属性グループ
 model SeatAttributeGroup {
-  id             BigInt                 @id @default(autoincrement())
+  id             BigInt              @id @default(autoincrement())
   storeId        BigInt
-  name           String                 @db.VarChar(100)
+  name           String              @db.VarChar(100)
   selectionType  SelectionType
-  status         AttributeStatus        @default(active)
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
+  status         AttributeStatus     @default(ACTIVE)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
-  store          Store                  @relation(fields: [storeId], references: [id])
-  attributes     SeatAttribute[]
+  store          Store               @relation("Store_to_SeatAttributeGroups", fields: [storeId], references: [id])
+  attributes     SeatAttribute[]     @relation("Group_to_Attributes")
 
   @@unique([storeId, name])
   @@map("seat_attribute_group")
@@ -131,17 +143,17 @@ model SeatAttributeGroup {
 
 /// 座席属性
 model SeatAttribute {
-  id           BigInt                       @id @default(autoincrement())
+  id           BigInt                     @id @default(autoincrement())
   storeId      BigInt
   groupId      BigInt
-  name         String                       @db.VarChar(100)
-  status       AttributeStatus              @default(active)
-  createdAt    DateTime                     @default(now())
-  updatedAt    DateTime                     @updatedAt
+  name         String                     @db.VarChar(100)
+  status       AttributeStatus            @default(ACTIVE)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
 
-  store        Store                        @relation(fields: [storeId], references: [id])
-  group        SeatAttributeGroup          @relation(fields: [groupId], references: [id])
-  assignments  SeatAttributeAssignment[]
+  store        Store                      @relation("Store_to_SeatAttributes", fields: [storeId], references: [id])
+  group        SeatAttributeGroup         @relation("Group_to_Attributes", fields: [groupId], references: [id])
+  assignments  SeatAttributeAssignment[]  @relation("Attribute_to_SeatAssignments")
 
   @@unique([storeId, groupId, name])
   @@map("seat_attribute")
@@ -151,11 +163,11 @@ model SeatAttribute {
 model SeatAttributeAssignment {
   seatId      BigInt
   attributeId BigInt
-  createdAt   DateTime                     @default(now())
-  updatedAt   DateTime                     @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  seat        Seat                         @relation(fields: [seatId], references: [id])
-  attribute   SeatAttribute                @relation(fields: [attributeId], references: [id])
+  seat        Seat          @relation("Seat_to_AttributeAssignments", fields: [seatId], references: [id])
+  attribute   SeatAttribute @relation("Attribute_to_SeatAssignments", fields: [attributeId], references: [id])
 
   @@id([seatId, attributeId])
   @@map("seat_attribute_assignment")
@@ -168,13 +180,13 @@ model Seat {
   name        String                       @db.VarChar(50)
   minCapacity Int                          @default(1)
   maxCapacity Int                          @default(1)
-  status      SeatStatus                   @default(active)
+  status      SeatStatus                   @default(ACTIVE)
   createdAt   DateTime                     @default(now())
   updatedAt   DateTime                     @updatedAt
 
-  store       Store                        @relation(fields: [storeId], references: [id])
-  attributes  SeatAttributeAssignment[]
-  layouts     LayoutSeat[]
+  store       Store                        @relation("Store_to_Seats", fields: [storeId], references: [id])
+  attributes  SeatAttributeAssignment[]    @relation("Seat_to_AttributeAssignments")
+  layouts     LayoutSeat[]                 @relation("Seat_to_Layouts")
 
   @@unique([storeId, name])
   @@map("seat")
@@ -182,17 +194,17 @@ model Seat {
 
 /// レイアウト
 model Layout {
-  id         BigInt         @id @default(autoincrement())
-  storeId    BigInt
-  name       String         @db.VarChar(100)
-  status     LayoutStatus   @default(active)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id                   BigInt               @id @default(autoincrement())
+  storeId              BigInt
+  name                 String               @db.VarChar(100)
+  status               LayoutStatus         @default(ACTIVE)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
-  store      Store          @relation(fields: [storeId], references: [id])
-  seats      LayoutSeat[]
-  schedules  LayoutSchedule[]
-  specialDaySchedules SpecialDaySchedule[] @relation("specialDayOnLayout")
+  store                Store                @relation("Store_to_Layouts", fields: [storeId], references: [id])
+  seats                LayoutSeat[]         @relation("Layout_to_Seats")
+  schedules            LayoutSchedule[]     @relation("Layout_to_LayoutSchedules")
+  specialDaySchedules  SpecialDaySchedule[] @relation("SpecialDaySchedule_to_Layout")
 
   @@unique([storeId, name])
   @@map("layout")
@@ -202,11 +214,11 @@ model Layout {
 model LayoutSeat {
   layoutId   BigInt
   seatId     BigInt
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  layout     Layout         @relation(fields: [layoutId], references: [id])
-  seat       Seat           @relation(fields: [seatId], references: [id])
+  layout     Layout @relation("Layout_to_Seats", fields: [layoutId], references: [id])
+  seat       Seat   @relation("Seat_to_Layouts", fields: [seatId], references: [id])
 
   @@id([layoutId, seatId])
   @@map("layout_seat")
@@ -214,17 +226,17 @@ model LayoutSeat {
 
 /// 週スケジュール切替用グループ
 model LayoutScheduleGroup {
-  id             BigInt               @id @default(autoincrement())
+  id             BigInt             @id @default(autoincrement())
   storeId        BigInt
-  name           String               @db.VarChar(100)
-  status         LayoutStatus         @default(active)
-  effectiveFrom  DateTime             @map("effective_from")
-  applyOnHoliday Boolean              @default(false)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt     @map("updated_at")
+  name           String             @db.VarChar(100)
+  status         LayoutStatus       @default(ACTIVE)
+  effectiveFrom  DateTime           @map("effective_from")
+  applyOnHoliday Boolean            @default(false)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt     @map("updated_at")
 
-  store          Store                @relation(fields: [storeId], references: [id])
-  schedules      LayoutSchedule[]
+  store          Store              @relation("Store_to_LayoutScheduleGroups", fields: [storeId], references: [id])
+  schedules      LayoutSchedule[]   @relation("Group_to_LayoutSchedules")
 
   @@unique([storeId, name])
   @@unique([storeId, effectiveFrom])
@@ -233,24 +245,25 @@ model LayoutScheduleGroup {
 
 /// レイアウト割当：曜日・時間帯ごと
 model LayoutSchedule {
-  id         BigInt             @id @default(autoincrement())
+  id         BigInt              @id @default(autoincrement())
   groupId    BigInt
   layoutId   BigInt
-  dayOfWeek  Int                 // 0(日)〜6(土)、7=祝日
+  dayOfWeek  Int                  // 0(日)〜6(土)、7=祝日
   startTime  DateTime   @db.Time  @map("start_time")
   endTime    DateTime?  @db.Time  @map("end_time")
-  status     LayoutStatus       @default(active)
-  createdAt  DateTime           @default(now()) @map("created_at")
-  updatedAt  DateTime           @updatedAt     @map("updated_at")
+  status     LayoutStatus        @default(ACTIVE)
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt     @map("updated_at")
 
-  group      LayoutScheduleGroup @relation(fields: [groupId], references: [id])
-  layout     Layout              @relation(fields: [layoutId], references: [id])
+  group      LayoutScheduleGroup @relation("Group_to_LayoutSchedules", fields: [groupId], references: [id])
+  layout     Layout              @relation("Layout_to_LayoutSchedules", fields: [layoutId], references: [id])
 
   @@index([groupId, dayOfWeek])
+  @@index([groupId, dayOfWeek, startTime])
   @@map("layout_schedule")
 }
 
-/// 定期休業グループ（有効開始日で識別、同一店舗で重複不可）
+/// 定期休業グループ
 model ClosedDayGroup {
   id             BigInt         @id @default(autoincrement())
   storeId        BigInt
@@ -259,57 +272,57 @@ model ClosedDayGroup {
   updatedAt      DateTime       @updatedAt     @map("updated_at")
 
   store          Store          @relation("storeClosedDays", fields: [storeId], references: [id])
-  rules          ClosedDay[]    @relation("groupRules")
+  rules          ClosedDay[]    @relation("Group_to_ClosedDays")
 
   @@unique([storeId, effectiveFrom])
   @@map("closed_day_group")
 }
 
-/// 定期休業ルール（週次／月次）
+/// 定期休業ルール
 model ClosedDay {
-  id          BigInt           @id @default(autoincrement())
+  id          BigInt         @id @default(autoincrement())
   groupId     BigInt
-  type        ClosedDayType    // WEEKLY / MONTHLY_DATE / MONTHLY_NTH_WEEK
-  dayOfWeek   Int?             // type = WEEKLY or MONTHLY_NTH_WEEK (0=日〜6=土, 7=祝日)
-  dayOfMonth  Int?             // type = MONTHLY_DATE (1–31, 99=末日)
-  weekOfMonth Int?             // type = MONTHLY_NTH_WEEK (1–5)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt     @map("updated_at")
+  type        ClosedDayType
+  dayOfWeek   Int?
+  dayOfMonth  Int?
+  weekOfMonth Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt     @map("updated_at")
 
-  group       ClosedDayGroup   @relation(fields: [groupId], references: [id], name: "groupRules")
+  group       ClosedDayGroup @relation("Group_to_ClosedDays", fields: [groupId], references: [id])
 
   @@map("closed_day")
 }
 
-/// 特定の日付の「特別日」を表すモデル
+/// 特定日テーブル
 model SpecialDay {
-  id        BigInt          @id @default(autoincrement())
+  id        BigInt               @id @default(autoincrement())
   storeId   BigInt
-  date      DateTime        @db.Date           // 対象日付（日付のみ）
-  type      SpecialDayType                     // BUSINESS or CLOSED
-  reason    String?        @db.VarChar(255)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  date      DateTime             @db.Date
+  type      SpecialDayType
+  reason    String?              @db.VarChar(255)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
-  store     Store           @relation(fields: [storeId], references: [id], name: "storeSpecialDays")
-  schedules SpecialDaySchedule[] @relation("specialDaySchedules")
+  store     Store                @relation("storeSpecialDays", fields: [storeId], references: [id])
+  schedules SpecialDaySchedule[] @relation("Day_to_SpecialSchedules")
 
   @@unique([storeId, date])
   @@map("special_day")
 }
 
-/// 特別営業日の時間帯・レイアウト割当を表すモデル
+/// 特別営業日スケジュール
 model SpecialDaySchedule {
-  id           BigInt       @id @default(autoincrement())
-  specialDayId BigInt
-  layoutId     BigInt                            // 適用レイアウト
-  startTime    DateTime      @db.Time            // 開始時刻
-  endTime      DateTime      @db.Time            // 終了時刻
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            BigInt      @id @default(autoincrement())
+  specialDayId  BigInt
+  layoutId      BigInt
+  startTime     DateTime    @db.Time
+  endTime       DateTime    @db.Time
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  specialDay   SpecialDay   @relation("specialDaySchedules", fields: [specialDayId], references: [id])
-  layout       Layout       @relation("specialDayOnLayout", fields: [layoutId], references: [id])
+  specialDay    SpecialDay  @relation("Day_to_SpecialSchedules", fields: [specialDayId], references: [id])
+  layout        Layout      @relation("SpecialDaySchedule_to_Layout", fields: [layoutId], references: [id])
 
   @@index([specialDayId])
   @@map("special_day_schedule")
@@ -317,7 +330,7 @@ model SpecialDaySchedule {
 
 /// 祝日テーブル
 model Holiday {
-  date      DateTime @id @db.Date                   // 祝日日付（日付のみ、主キー）
+  date      DateTime @id @db.Date
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("holiday")
@@ -330,7 +343,7 @@ model Reservation {
   storeId          BigInt             @map("store_id")
   courseId         BigInt?            @map("course_id")
   numPeople        Int                @map("num_people") @default(1)
-  status           ReservationStatus  @default(booked)
+  status           ReservationStatus  @default(BOOKED)
   customerName     String             @map("customer_name")
   customerEmail    String             @map("customer_email")
   customerPhone    String?            @map("customer_phone")
@@ -339,77 +352,158 @@ model Reservation {
   createdAt        DateTime           @default(now()) @map("created_at")
   updatedAt        DateTime           @updatedAt         @map("updated_at")
 
-  reservationSeats ReservationSeat[]
-
-  store            Store              @relation(fields: [storeId], references: [id])
+  reservationSeats ReservationSeat[]  @relation("Reservation_to_Seats")
+  store            Store              @relation("Store_to_Reservations", fields: [storeId], references: [id])
+  course           Course?            @relation("Course_to_Reservations", fields: [courseId], references: [id])
 
   @@map("reservation")
 }
 
-/// 予約×座席（時間帯）テーブル
+/// 予約×座席テーブル
 model ReservationSeat {
-  reservation    Reservation @relation(fields: [reservationId], references: [id])
+  reservation    Reservation @relation("Reservation_to_Seats", fields: [reservationId], references: [id])
   reservationId  BigInt      @map("reservation_id")
   seatId         BigInt      @map("seat_id")
   date           DateTime    @db.Date
   startTime      DateTime    @db.Time   @map("start_time")
   endTime        DateTime    @db.Time   @map("end_time")
-  createdAt      DateTime    @default(now())             @map("created_at")
-  updatedAt      DateTime    @updatedAt                 @map("updated_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt     @map("updated_at")
 
   @@id([reservationId, seatId, date, startTime])
+  @@index([date, startTime])
   @@map("reservation_seat")
 }
 
+/// コース情報テーブル
+model Course {
+  id               BigInt                   @id @default(autoincrement())
+  storeId          BigInt                   @map("store_id")
+  name             String                   @db.VarChar(100)
+  price            Decimal?                 @db.Decimal(10, 2)
+  minPeople        Int?                     @map("min_people")
+  maxPeople        Int?                     @map("max_people")
+  durationMinutes  Int                      @map("duration_minutes")
+  description      String?                  @db.Text
+  status           CourseStatus             @default(ACTIVE)
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt     @map("updated_at")
 
+  store            Store                    @relation("Store_to_Courses", fields: [storeId], references: [id])
+  images           CourseImage[]            @relation("Course_to_Images")
+  scheduleGroup    CourseScheduleGroup?     @relation("Course_to_ScheduleGroup")
+  specialGroups    SpecialCourseScheduleGroup[] @relation("Course_to_SpecialGroups")
+  reservations     Reservation[]            @relation("Course_to_Reservations")
 
+  @@map("course")
+  @@index([storeId])
+  @@unique([storeId, name])
+}
+
+/// コース画像テーブル
+model CourseImage {
+  id        BigInt   @id @default(autoincrement())
+  courseId  BigInt   @map("course_id")
+  url       String   @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt   @map("updated_at")
+
+  course    Course   @relation("Course_to_Images", fields: [courseId], references: [id])
+
+  @@map("course_image")
+  @@index([courseId])
+}
+
+/// 定期コーススケジュールグループ
+model CourseScheduleGroup {
+  id             BigInt   @id @default(autoincrement())
+  courseId       BigInt   @map("course_id")
+  status         CourseStatus @default(ACTIVE)
+  effectiveFrom  DateTime?    @map("effective_from")
+  effectiveTo    DateTime?    @map("effective_to")
+  applyOnHoliday Boolean       @default(false) @map("apply_on_holiday")
+  createdAt      DateTime     @default(now())   @map("created_at")
+  updatedAt      DateTime     @updatedAt        @map("updated_at")
+
+  course         Course       @relation("Course_to_ScheduleGroup", fields: [courseId], references: [id])
+  schedules      CourseSchedule[] @relation("Group_to_CourseSchedules")
+
+  @@map("course_schedule_group")
+  @@unique([courseId])
+}
+
+/// 定期スケジュール詳細テーブル
+model CourseSchedule {
+  id        BigInt   @id @default(autoincrement())
+  groupId   BigInt   @map("group_id")
+  dayOfWeek Int      @map("day_of_week")
+  startTime DateTime @db.Time            @map("start_time")
+  endTime   DateTime @db.Time            @map("end_time")
+  status    CourseStatus @default(ACTIVE)
+  createdAt DateTime      @default(now())  @map("created_at")
+  updatedAt DateTime      @updatedAt       @map("updated_at")
+
+  group     CourseScheduleGroup @relation("Group_to_CourseSchedules", fields: [groupId], references: [id])
+
+  @@map("course_schedule")
+  @@index([groupId, dayOfWeek])
+}
+
+/// 特別コーススケジュールグループ
+model SpecialCourseScheduleGroup {
+  id            BigInt               @id @default(autoincrement())
+  courseId      BigInt               @map("course_id")
+  date          DateTime             @db.Date
+  type          SpecialScheduleType
+  reason        String?              @db.VarChar(255)
+  status        CourseStatus         @default(ACTIVE)
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt     @map("updated_at")
+
+  course        Course               @relation("Course_to_SpecialGroups", fields: [courseId], references: [id])
+  specialItems  SpecialCourseSchedule[] @relation("Group_to_SpecialGroups")
+
+  @@map("special_course_schedule_group")
+  @@unique([courseId, date])
+}
+
+/// 特別スケジュール詳細テーブル
+model SpecialCourseSchedule {
+  id          BigInt       @id @default(autoincrement())
+  groupId     BigInt       @map("group_id")
+  startTime   DateTime     @db.Time      @map("start_time")
+  endTime     DateTime     @db.Time      @map("end_time")
+  status      CourseStatus @default(ACTIVE)
+  description String?      @db.VarChar(255)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt     @map("updated_at")
+
+  group       SpecialCourseScheduleGroup @relation("Group_to_SpecialGroups", fields: [groupId], references: [id])
+
+  @@map("special_course_schedule")
+  @@index([groupId])
+}
+
+/// 予約設定テーブル
 model ReservationSettings {
   id                         BigInt   @id @default(autoincrement())
   storeId                    BigInt   @unique
-  gridUnit                   Int      @default(15)   // 予約枠の刻み（分）
-  standardReservationMinutes Int      @default(60)   // 標準予約時間（分）
-
-  // 予約枠開放と締切をまとめた JSON
+  gridUnit                   Int      @default(15)
+  standardReservationMinutes Int      @default(60)
   bookingWindow              Json     @default("{}")
-  /*
-    例:
-    {
-      "open":  { "mode":"rolling", "daysBefore":30 },
-      "close": { "mode":"absolute", "daysBefore":1 }
-    }
-  */
-
-  bufferTime                 Int      @default(0)    // バッファタイム（分）
-
+  bufferTime                 Int      @default(0)
   allowCourseSelection       Boolean  @default(false)
   allowSeatSelection         Boolean  @default(false)
-
   allowSeatCombination       Boolean  @default(false)
-  minCombinationPartySize    Int?                    // optional
-  maxCombinationSeats        Int?                    // optional
-
-  // キャンセル・変更ポリシーも JSON でまとめて管理
-  cancellationPolicy         Json?    @default("{}") 
-  /*
-    例:
-    {
-      "enabled": true,
-      "deadlineBefore": { "hoursBeforeStart":1 }
-    }
-  */
+  minCombinationPartySize    Int?
+  maxCombinationSeats        Int?
+  cancellationPolicy         Json?    @default("{}")
   modificationPolicy         Json?    @default("{}")
-  /*
-    例:
-    {
-      "enabled": true,
-      "deadlineBefore": { "hoursBeforeStart":2 }
-    }
-  */
-
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
-  store                      Store    @relation(fields: [storeId], references: [id])
+  store                      Store    @relation("Store_to_ReservationSettings", fields: [storeId], references: [id])
 
-  @@map("reservation_settings")
+  @@map("reservation_setting")
 }

@@ -27,7 +27,7 @@ export class ScheduleController {
   ) { }
 
   @Get('month-detail')              // ← ここを先頭に移動
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   async getMonthDetail(
     @Param('storeId', ParseIntPipe) storeId: number,
@@ -39,7 +39,7 @@ export class ScheduleController {
   }
 
   @Get()
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   async getAll(
     @Param('storeId', ParseIntPipe) storeId: number,
@@ -48,7 +48,7 @@ export class ScheduleController {
   }
 
   @Get(':groupId')                  // ← こちらは後ろへ
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   findOne(
     @Param('storeId', ParseIntPipe) storeId: number,
@@ -58,7 +58,7 @@ export class ScheduleController {
   }
 
   @Post()
-  @Auth({ roles: ['owner', 'manager'] })
+  @Auth({ roles: ['OWNER', 'MANAGER'] })
   @RequireStore()
   @HttpCode(HttpStatus.CREATED)
   async create(

@@ -15,7 +15,7 @@ interface DecodedToken {
 
 export interface AuthUser {
   id: string;
-  role: 'owner' | 'manager' | 'staff';
+  role: 'OWNER' | 'MANAGER' | 'STAFF';
   username?: string;
   allowedStoreIds: number[];
 }

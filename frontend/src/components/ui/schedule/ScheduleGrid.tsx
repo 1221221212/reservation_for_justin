@@ -57,9 +57,7 @@ export default function ScheduleGrid({
                                 } time-cell flex items-center justify-end pr-1 text-xs`}
                             style={{ height: `${actualRowHeight}px` }}
                         >
-                            {r % 2 === 0
-                                ? `${String(Math.floor(r / 2)).padStart(2, '0')}:00`
-                                : ''}
+                            {r % 2 === 0 ? `${String(Math.floor(r / 2)).padStart(2, '0')}:00` : ''}
                         </div>
                         {/* 各曜日セル */}
                         {columns.map((_, c) => (
@@ -68,14 +66,10 @@ export default function ScheduleGrid({
                                 className={`relative h-full border-r border-gray-300 border-t ${r % 2 === 0 ? 'border-t-gray-300' : 'border-t-gray-100'
                                     }`}
                                 onMouseDown={
-                                    mode === 'edit'
-                                        ? () => onCellMouseDown?.(r, c)
-                                        : undefined
+                                    mode === 'edit' ? () => onCellMouseDown?.(r, c) : undefined
                                 }
                                 onMouseEnter={
-                                    mode === 'edit'
-                                        ? () => onCellMouseEnter?.(r, c)
-                                        : undefined
+                                    mode === 'edit' ? () => onCellMouseEnter?.(r, c) : undefined
                                 }
                             >
                                 {mode === 'edit' && isCellSelected?.(r, c) && (
@@ -90,15 +84,23 @@ export default function ScheduleGrid({
                 {schedules.map((it, idx) => {
                     const layout = layouts.find((l) => l.id === it.layoutId);
                     if (!layout) return null;
-                    const start = timeToRow(it.startTime);
-                    const end = timeToRow(it.endTime ?? it.startTime);
-                    const top = start * actualRowHeight + actualRowHeight;
-                    const height = (end - start) * actualRowHeight;
-                    const left = `calc(80px + ${it.dayOfWeek} * ((100% - 80px) / ${columns.length}))`;
+
+                    // 開始行
+                    const startRow = timeToRow(it.startTime);
+                    // 生の終了行
+                    const rawEndRow = timeToRow(it.endTime ?? it.startTime);
+                    // 終日("00:00")または rawEndRow <= startRow の場合は 24:00(48行目)扱い
+                    const endRow = it.endTime === '00:00' || rawEndRow <= startRow ? 48 : rawEndRow;
+
+                    const top = startRow * actualRowHeight + actualRowHeight;
+                    const height = (endRow - startRow) * actualRowHeight;
+                    const left = `calc(80px + ${it.dayOfWeek} * ((100% - 80px) / ${columns.length
+                        }))`;
                     const width = `calc((100% - 80px) / ${columns.length})`;
-                    // 秒を除去した時刻表示
+
+                    // 表示用ラベル（HH:mm）
                     const startLabel = it.startTime.slice(0, 5);
-                    const endLabel = it.endTime ? it.endTime.slice(0, 5) : '';
+                    const endLabel = (it.endTime ?? it.startTime).slice(0, 5);
 
                     return (
                         <div
