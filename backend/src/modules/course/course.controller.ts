@@ -1,5 +1,3 @@
-// backend/src/modules/course/course.controller.ts
-
 import {
     Controller,
     Get,
@@ -27,11 +25,12 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { CourseResponseDto } from './dto/course-response.dto';
 import { CourseMonthlyAvailabilityResponseDto } from './dto/course-monthly-availability.dto';
 import { AvailableCoursesResponseDto } from './dto/available-courses-response.dto';
+import { CreateSpecialCourseScheduleGroupDto } from './dto/create-special-course-schedule-group.dto';
 
 @ApiTags('courses')
 @Controller('stores/:storeId/courses')
 export class CourseController {
-    constructor(private readonly courseService: CourseService) { }
+    constructor(private readonly courseService: CourseService) {}
 
     @Get()
     @ApiOperation({ summary: 'コース一覧取得' })
@@ -117,18 +116,37 @@ export class CourseController {
     }
 
     // ───────────────────────────────────────────────────────────
-    // 日時指定可用性検索 API
+    // 日時指定・人数指定可用性検索 API
     @Get('availability')
-    @ApiOperation({ summary: '指定日時で利用可能なコース一覧取得' })
+    @ApiOperation({ summary: '指定日時・人数で利用可能なコース一覧取得' })
     @ApiParam({ name: 'storeId', description: '店舗ID', type: Number })
     @ApiQuery({ name: 'date', description: '対象日 (YYYY-MM-DD)', example: '2025-08-15' })
-    @ApiQuery({ name: 'time', description: '対象時刻 (HH:mm)', example: '19:30' })
+    @ApiQuery({ name: 'time', description: '対象時刻 (HH:mm)',    example: '19:30' })
+    @ApiQuery({ name: 'count', description: '予約人数',             example: 2, required: false })
     @ApiResponse({ status: 200, type: AvailableCoursesResponseDto })
     async findAvailableCourses(
         @Param('storeId', ParseIntPipe) storeId: number,
         @Query('date') date: string,
         @Query('time') time: string,
+        @Query('count', ParseIntPipe) count?: number,
     ): Promise<AvailableCoursesResponseDto> {
-        return this.courseService.findAvailableCourses(storeId, date, time);
+        return this.courseService.findAvailableCourses(storeId, date, time, count);
+    }
+
+    /**
+     * 特別日のスケジュールを作成
+     */
+    @Post(':courseId/special')
+    @ApiOperation({ summary: '特別日のスケジュールを作成' })
+    @ApiParam({ name: 'storeId', description: '店舗ID', type: Number })
+    @ApiParam({ name: 'courseId', description: 'コースID', type: Number })
+    @ApiBody({ type: CreateSpecialCourseScheduleGroupDto })
+    @ApiResponse({ status: 201 })
+    async createSpecial(
+        @Param('storeId', ParseIntPipe) storeId: number,
+        @Param('courseId', ParseIntPipe) courseId: number,
+        @Body() dto: CreateSpecialCourseScheduleGroupDto,
+    ): Promise<void> {
+        await this.courseService.createSpecialCourseScheduleGroup(storeId, courseId, dto);
     }
 }

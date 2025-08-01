@@ -60,9 +60,9 @@ export const STORE_MENU: StoreMenuItem[] = [
     href: '/admin/store/[storeId]/course/list',
     roles: ['OWNER', 'MANAGER'],
     children: [
-      {
-        key: 'courseConfig',
-        label: 'コース設定',
+            {
+        key: 'courseList',
+        label: 'コース一覧',
         href: '/admin/store/[storeId]/course/list',
       },
     ],

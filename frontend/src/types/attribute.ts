@@ -11,7 +11,7 @@ export interface Attribute {
 export interface AttributeGroup {
     id: number;
     name: string;
-    selectionType: 'single' | 'multiple';
+    selectionType: 'SINGLE' | 'MULTIPLE';
     status: string;
     attributes: Attribute[];
 }
@@ -19,7 +19,7 @@ export interface AttributeGroup {
 /** 新規属性グループ作成用パラメータ */
 export interface CreateAttributeGroupParams {
     name: string;
-    selectionType: 'single' | 'multiple';
+    selectionType: 'SINGLE' | 'MULTIPLE';
     attributes: { name: string }[];
 }
 

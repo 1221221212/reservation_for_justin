@@ -68,7 +68,7 @@ export default function SeatPage() {
         setSelectedAttributes(prev => {
             const current = prev[group.id] || [];
             let updated: number[] = [];
-            if (group.selectionType === 'single') {
+            if (group.selectionType === 'SINGLE') {
                 updated = checked ? [attrId] : [];
             } else {
                 if (checked) {
@@ -177,7 +177,7 @@ export default function SeatPage() {
                                             return (
                                                 <label key={attr.id} className="flex items-center space-x-2">
                                                     <input
-                                                        type={group.selectionType === 'single' ? 'radio' : 'checkbox'}
+                                                        type={group.selectionType === 'SINGLE' ? 'radio' : 'checkbox'}
                                                         name={`group-${group.id}`}
                                                         checked={checked}
                                                         onChange={e => onSelect(group, attr.id, e.target.checked)}

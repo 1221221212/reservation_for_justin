@@ -103,7 +103,7 @@ export default function ReservationSettingsPage() {
 
     const unit = settings.gridUnit;
     const maxCount = Math.floor((24 * 60) / unit);
-    const multiples = Array.from({ length: maxCount }, (_, i) => (i + 1) * unit);
+    const MULTIPLEs = Array.from({ length: maxCount }, (_, i) => (i + 1) * unit);
     const bw = settings.bookingWindow;
 
     return (
@@ -140,7 +140,7 @@ export default function ReservationSettingsPage() {
                     }
                     className="w-full border rounded px-3 py-2 focus:ring"
                 >
-                    {multiples.map((m) => (
+                    {MULTIPLEs.map((m) => (
                         <option key={m} value={m}>
                             {m % 60 === 0 ? `${m / 60}時間` : `${m}分`}
                         </option>
@@ -158,7 +158,7 @@ export default function ReservationSettingsPage() {
                     className="w-full border rounded px-3 py-2 focus:ring"
                 >
                     <option value={0}>0分</option>
-                    {multiples.map((m) => (
+                    {MULTIPLEs.map((m) => (
                         <option key={m} value={m}>
                             {m % 60 === 0 ? `${m / 60}時間` : `${m}分`}
                         </option>

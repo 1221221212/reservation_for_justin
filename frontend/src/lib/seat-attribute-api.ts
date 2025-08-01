@@ -23,7 +23,7 @@ export const fetchAttributeGroups = (storeId: number) =>
 export const createAttributeGroup = (
     storeId: number,
     params: CreateAttributeGroupParams
-) => api.post<AttributeGroup>(`/store/${storeId}/seat-attributes`, params);
+) => api.post<AttributeGroup>(`/store/${storeId}/seat-attribute`, params);
 
 /**
  * 属性グループを削除します

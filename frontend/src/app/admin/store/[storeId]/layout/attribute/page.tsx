@@ -22,7 +22,7 @@ export default function SeatAttributesPage() {
     const [groups, setGroups] = useState<AttributeGroup[]>([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
-    const [newSelectionType, setNewSelectionType] = useState<'single' | 'multiple'>('single');
+    const [newSelectionType, setNewSelectionType] = useState<'SINGLE' | 'MULTIPLE'>('SINGLE');
     const [newAttributes, setNewAttributes] = useState<string[]>(['']);
     const [showAttrModal, setShowAttrModal] = useState<{ open: boolean; groupId: number | null }>({ open: false, groupId: null });
     const [newAttrName, setNewAttrName] = useState('');
@@ -50,7 +50,7 @@ export default function SeatAttributesPage() {
         await createAttributeGroup(storeId, params);
         setShowGroupModal(false);
         setNewGroupName('');
-        setNewSelectionType('single');
+        setNewSelectionType('SINGLE');
         setNewAttributes(['']);
         loadGroups();
     };
@@ -144,11 +144,11 @@ export default function SeatAttributesPage() {
                         />
                         <select
                             value={newSelectionType}
-                            onChange={e => setNewSelectionType(e.target.value as 'single' | 'multiple')}
+                            onChange={e => setNewSelectionType(e.target.value as 'SINGLE' | 'MULTIPLE')}
                             className="w-full p-2 border rounded mb-2"
                         >
-                            <option value="single">単一選択</option>
-                            <option value="multiple">複数選択</option>
+                            <option value="SINGLE">単一選択</option>
+                            <option value="MULTIPLE">複数選択</option>
                         </select>
                         <label className="font-medium mt-2">属性:</label>
                         {newAttributes.map((attr, idx) => (

@@ -4,7 +4,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma-client/prisma.service';
 import { SeatMatrixService } from '@/modules/schedule/seat-matrix.service';
 import { MonthScheduleService } from '@/modules/schedule/month-schedule.service';
-import { DaySummary, SeatFirstSpan } from './types';
+
+// ドメイン用の型定義をファイル内にインライン定義
+/** 月間カレンダー用サマリ */
+type DaySummary = { date: string; status: 'closed' | 'full' | 'available' };
+/** 席ファーストの詳細可用性スパン */
+type SeatFirstSpan = { seatId: number; spans: Array<{ start: string; end: string }> };
 
 @Injectable()
 export class AvailabilityService {
@@ -26,21 +31,19 @@ export class AvailabilityService {
         standardSlotMin: number,
         bufferSlots: number,
     ): Promise<DaySummary[]> {
-        // 1) 月間スケジュール詳細を一度だけ取得
         const monthDetails = await this.monthScheduleService.getMonthDetail(
             Number(storeId),
             year,
             month,
         );
 
-        // 2) 各日を並列で処理
-        const summaries = await Promise.all(
+        const summaries: DaySummary[] = await Promise.all(
             monthDetails.map(async (dd) => {
                 if (dd.status === 'closed') {
-                    return { date: dd.date, status: 'closed' } as DaySummary;
+                    // 閉店日
+                    return { date: dd.date, status: 'closed' };
                 }
 
-                // 3) 日別の「フィルタ前スパン」を取得
                 const rawSpans = await this.seatMatrixService.compressToSeatFirst(
                     storeId,
                     new Date(dd.date),
@@ -48,7 +51,6 @@ export class AvailabilityService {
                     bufferSlots,
                 );
 
-                // 4) いずれかの席に standardSlotMin 分以上の連続空きがあれば available
                 const hasRoom = rawSpans.some(({ spans }) =>
                     spans.some(({ start, end }) => {
                         const [sh, sm] = start.split(':').map(Number);
@@ -57,10 +59,9 @@ export class AvailabilityService {
                     }),
                 );
 
-                return {
-                    date: dd.date,
-                    status: hasRoom ? 'available' : 'full',
-                } as DaySummary;
+                // リテラル型を保持するために明示的に型注釈
+                const status: 'available' | 'full' = hasRoom ? 'available' : 'full';
+                return { date: dd.date, status };
             }),
         );
 
@@ -78,7 +79,6 @@ export class AvailabilityService {
         standardSlotMin: number,
         bufferSlots: number,
     ): Promise<SeatFirstSpan[]> {
-        // 全席の空きスパンをビルド（フィルタ前）
         const allSpans = await this.seatMatrixService.compressToSeatFirst(
             storeId,
             new Date(dateStr),
@@ -86,7 +86,6 @@ export class AvailabilityService {
             bufferSlots,
         );
 
-        // パーティサイズ（席容量）でフィルタ
         const seatIds = allSpans.map((s) => BigInt(s.seatId));
         const seats = await this.prisma.seat.findMany({
             where: {

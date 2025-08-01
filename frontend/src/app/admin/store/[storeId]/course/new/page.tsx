@@ -253,17 +253,6 @@ export default function NewCoursePage() {
                         />
                     </div>
 
-                    {/* 祝日適用 */}
-                    <div className="col-span-2 flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            checked={form.applyOnHoliday}
-                            onChange={e => updateForm('applyOnHoliday', e.target.checked)}
-                            className="form-checkbox"
-                        />
-                        <span>祝日を含める</span>
-                    </div>
-
                     {/* ステータス */}
                     <div className="col-span-2">
                         <label className="block mb-1 font-medium">ステータス</label>

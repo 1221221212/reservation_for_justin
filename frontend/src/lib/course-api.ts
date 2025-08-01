@@ -5,11 +5,21 @@ import {
     CourseResponseDto,
     CreateCourseDto,
     UpdateCourseDto,
+    CourseMonthlyAvailabilityResponseDto,
+    AvailableCoursesResponseDto,
 } from '@/types/course';
+import {
+    CreateSpecialCourseScheduleGroupParams,
+    SpecialCourseScheduleGroupDto,
+} from '@/types/course-special-schedule';
 
 /** 店舗のコース一覧取得 */
-export async function fetchCourses(storeId: number): Promise<CourseResponseDto[]> {
-    const res = await api.get<CourseResponseDto[]>(`/stores/${storeId}/courses`);
+export async function fetchCourses(
+    storeId: number
+): Promise<CourseResponseDto[]> {
+    const res = await api.get<CourseResponseDto[]>(
+        `/stores/${storeId}/courses`
+    );
     return res.data;
 }
 
@@ -54,5 +64,57 @@ export async function deleteCourse(
     storeId: number,
     courseId: number
 ): Promise<void> {
-    await api.delete(`/stores/${storeId}/courses/${courseId}`);
+    await api.delete(
+        `/stores/${storeId}/courses/${courseId}`
+    );
+}
+
+/** 月次可用性取得 */
+export async function fetchCourseMonthlyAvailability(
+    storeId: number,
+    courseId: number,
+    year: number,
+    month: number
+): Promise<CourseMonthlyAvailabilityResponseDto> {
+    const res = await api.get<
+        CourseMonthlyAvailabilityResponseDto
+    >(
+        `/stores/${storeId}/courses/${courseId}/availability/monthly?year=${year}&month=${month}`
+    );
+    return res.data;
+}
+
+/** 指定日時で利用可能なコース一覧取得 */
+export async function fetchAvailableCourses(
+    storeId: number,
+    date: string,
+    time: string
+): Promise<AvailableCoursesResponseDto> {
+    const res = await api.get<AvailableCoursesResponseDto>(
+        `/stores/${storeId}/courses/availability?date=${date}&time=${time}`
+    );
+    return res.data;
+}
+
+/** 特別日スケジュールグループ作成 */
+export async function createSpecialCourseScheduleGroup(
+    storeId: number,
+    courseId: number,
+    dto: CreateSpecialCourseScheduleGroupParams
+): Promise<void> {
+    await api.post(
+        `/stores/${storeId}/courses/${courseId}/special`,
+        dto
+    );
+}
+
+/** 特別日スケジュールグループ削除 */
+export async function deleteSpecialCourseScheduleGroup(
+    storeId: number,
+    courseId: number,
+    date: string
+): Promise<void> {
+    await api.delete(
+        `/stores/${storeId}/courses/${courseId}/special?date=${date}`
+    );
 }

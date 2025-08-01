@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { fetchCourse } from '@/lib/course-api';
 import { CourseResponseDto } from '@/types/course';
 import { CreateScheduleItem } from '@/types/schedule';
@@ -89,12 +90,13 @@ export default function CourseDetailPage() {
         <div className="p-4 max-w-4xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">{course.name}</h1>
-                <button
-                    onClick={() => router.push(`/admin/store/${sId}/courses/${cId}/edit`)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+
+                <Link
+                    href={`/admin/store/${sId}/course/${cId}/calendar`}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
-                    編集
-                </button>
+                    スケジュール確認
+                </Link>
             </div>
 
             {/* 画像ギャラリー */}

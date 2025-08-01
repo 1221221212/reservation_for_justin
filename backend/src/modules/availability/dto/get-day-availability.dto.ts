@@ -1,20 +1,23 @@
 // backend/src/modules/availability/dto/get-day-availability.dto.ts
 
-import { IsInt, IsDateString, Min } from 'class-validator';
+import { IsInt, Min, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class GetDayAvailabilityDto {
     @ApiProperty({ description: '店舗ID', example: 1 })
+    @Type(() => Number)
     @IsInt()
     @Min(1)
-    storeId!: number;   // ← 確定代入アサーション
+    storeId!: number;
 
-    @ApiProperty({ description: '日付（YYYY-MM-DD）', example: '2025-07-21' })
+    @ApiProperty({ description: '日付 (YYYY-MM-DD)', example: '2025-08-12' })
     @IsDateString()
-    date!: string;      // ← ここも!
+    date!: string;
 
-    @ApiProperty({ description: 'パーティーサイズ', example: 2 })
+    @ApiProperty({ description: '人数', example: 1 })
+    @Type(() => Number)
     @IsInt()
     @Min(1)
-    partySize!: number; // ← ここも!
+    partySize!: number;
 }
