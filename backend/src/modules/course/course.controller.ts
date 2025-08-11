@@ -30,7 +30,7 @@ import { CreateSpecialCourseScheduleGroupDto } from './dto/create-special-course
 @ApiTags('courses')
 @Controller('stores/:storeId/courses')
 export class CourseController {
-    constructor(private readonly courseService: CourseService) {}
+    constructor(private readonly courseService: CourseService) { }
 
     @Get()
     @ApiOperation({ summary: 'コース一覧取得' })
@@ -40,6 +40,24 @@ export class CourseController {
         @Param('storeId', ParseIntPipe) storeId: number,
     ): Promise<CourseResponseDto[]> {
         return this.courseService.findAll(storeId);
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // 日時指定・人数指定可用性検索 API
+    @Get('availability')
+    @ApiOperation({ summary: '指定日時・人数で利用可能なコース一覧取得' })
+    @ApiParam({ name: 'storeId', description: '店舗ID', type: Number })
+    @ApiQuery({ name: 'date', description: '対象日 (YYYY-MM-DD)', example: '2025-08-15' })
+    @ApiQuery({ name: 'time', description: '対象時刻 (HH:mm)', example: '19:30' })
+    @ApiQuery({ name: 'count', description: '予約人数', example: 2, required: false })
+    @ApiResponse({ status: 200, type: AvailableCoursesResponseDto })
+    async findAvailableCourses(
+        @Param('storeId', ParseIntPipe) storeId: number,
+        @Query('date') date: string,
+        @Query('time') time: string,
+        @Query('count', ParseIntPipe) count?: number,
+    ): Promise<AvailableCoursesResponseDto> {
+        return this.courseService.findAvailableCourses(storeId, date, time, count);
     }
 
     @Get(':courseId')
@@ -115,23 +133,6 @@ export class CourseController {
         );
     }
 
-    // ───────────────────────────────────────────────────────────
-    // 日時指定・人数指定可用性検索 API
-    @Get('availability')
-    @ApiOperation({ summary: '指定日時・人数で利用可能なコース一覧取得' })
-    @ApiParam({ name: 'storeId', description: '店舗ID', type: Number })
-    @ApiQuery({ name: 'date', description: '対象日 (YYYY-MM-DD)', example: '2025-08-15' })
-    @ApiQuery({ name: 'time', description: '対象時刻 (HH:mm)',    example: '19:30' })
-    @ApiQuery({ name: 'count', description: '予約人数',             example: 2, required: false })
-    @ApiResponse({ status: 200, type: AvailableCoursesResponseDto })
-    async findAvailableCourses(
-        @Param('storeId', ParseIntPipe) storeId: number,
-        @Query('date') date: string,
-        @Query('time') time: string,
-        @Query('count', ParseIntPipe) count?: number,
-    ): Promise<AvailableCoursesResponseDto> {
-        return this.courseService.findAvailableCourses(storeId, date, time, count);
-    }
 
     /**
      * 特別日のスケジュールを作成

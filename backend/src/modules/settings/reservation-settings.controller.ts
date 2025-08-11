@@ -1,20 +1,30 @@
-import { Controller, Get, Put, Param, Body, Query, ParseIntPipe } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Put,
+    Param,
+    Body,
+    ParseIntPipe,
+} from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+} from '@nestjs/swagger';
+import { ReservationSettings } from '@prisma/client';
 import { ReservationSettingsService } from './reservation-settings.service';
 import { UpdateReservationSettingsDto } from './dto/update-reservation-settings.dto';
-import { ReservationSettings } from '@prisma/client';
+import { GetNextStepResponseDto } from './dto/get-reservation-settings-response.dto';
 
-// "次の画面" を表すレスポンスインターフェース
-interface NextStepResponse {
-    nextStep: 'course' | 'seat' | 'info';
-}
-
+@ApiTags('reservation-settings')
 @Controller('store/:storeId/settings/reservation')
 export class ReservationSettingsController {
     constructor(
         private readonly settingsService: ReservationSettingsService,
     ) { }
 
-    /** GET /store/:storeId/settings/reservation */
+    /** 内部用：全設定をそのまま返却 */
     @Get()
     async getSettings(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -22,7 +32,7 @@ export class ReservationSettingsController {
         return this.settingsService.getByStore(BigInt(storeId));
     }
 
-    /** PUT /store/:storeId/settings/reservation */
+    /** 内部用：設定更新 */
     @Put()
     async updateSettings(
         @Param('storeId', ParseIntPipe) storeId: number,
@@ -32,22 +42,24 @@ export class ReservationSettingsController {
     }
 
     /**
-     * 次の画面遷移先を返す
-     * - allowCourseSelection が true → 'course'
-     * - allowSeatSelection が true → 'seat'
-     * - 上記どちらも false → 'info'
+     * GET /store/:storeId/settings/reservation/next-step
+     * フロント用：次の画面判定フラグを返却
      */
     @Get('next-step')
-    async getNextStep(
+    @ApiOperation({ summary: '次の画面判定フラグの取得' })
+    @ApiParam({ name: 'storeId', description: '店舗ID', type: Number })
+    @ApiResponse({
+        status: 200,
+        description: 'コース／席選択可否フラグ',
+        type: GetNextStepResponseDto,
+    })
+    async getNextStepFlags(
         @Param('storeId', ParseIntPipe) storeId: number,
-    ): Promise<NextStepResponse> {
-        const cfg = await this.settingsService.getByStore(BigInt(storeId));
-        if (cfg.allowCourseSelection) {
-            return { nextStep: 'course' };
-        }
-        if (cfg.allowSeatSelection) {
-            return { nextStep: 'seat' };
-        }
-        return { nextStep: 'info' };
+    ): Promise<GetNextStepResponseDto> {
+        const settings = await this.settingsService.getByStore(BigInt(storeId));
+        return {
+            allowCourseSelection: settings.allowCourseSelection,
+            allowSeatSelection: settings.allowSeatSelection,
+        };
     }
 }

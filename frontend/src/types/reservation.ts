@@ -43,3 +43,12 @@ export interface AvailabilityDayResponse {
     /** 各座席のフィルタ前スパン一覧 */
     data: SeatFirstSpan[];
 }
+
+/**
+ * GET /store/:storeId/settings/reservation/next-step
+ * 次の画面判定フラグ
+ */
+export interface NextStepFlags {
+    allowCourseSelection: boolean;
+    allowSeatSelection: boolean;
+}

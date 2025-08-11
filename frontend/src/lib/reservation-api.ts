@@ -1,5 +1,5 @@
 import api from './api';
-import type { DaySummary, SeatFirstSpan, AvailabilityDayResponse } from '@/types/reservation';
+import type { DaySummary, AvailabilityDayResponse, NextStepFlags} from '@/types/reservation';
 
 /**
  * 月別可用性取得
@@ -26,9 +26,9 @@ export const fetchAvailabilityDay = (
     );
 
 /**
-* 次の画面遷移先取得
-*/
-export const fetchNextStep = (storeId: number) =>
-    api.get<{ nextStep: 'course' | 'seat' | 'info' }>(
+ * 次の画面判定フラグ取得
+ */
+export const fetchNextStepFlags = (storeId: number) =>
+    api.get<NextStepFlags>(
         `/store/${storeId}/settings/reservation/next-step`
     );

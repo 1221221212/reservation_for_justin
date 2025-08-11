@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchAvailabilityDay, fetchNextStep } from '@/lib/reservation-api';
-import type { SeatFirstSpan, AvailabilityDayResponse } from '@/types/reservation';
+import { fetchAvailabilityDay, fetchNextStepFlags } from '@/lib/reservation-api';
+import type {
+    SeatFirstSpan,
+    AvailabilityDayResponse,
+    NextStepFlags,
+} from '@/types/reservation';
 
-// ヘルパー: "HH:mm" を分に変換
+/** "HH:mm" → 分 に変換 */
 const parseTime = (time: string): number => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
@@ -23,17 +27,23 @@ export default function ReserveTimePage() {
     const [gridUnit, setGridUnit] = useState<number>(15);
     const [standardMinutes, setStandardMinutes] = useState<number>(60);
     const [bufferSlots, setBufferSlots] = useState<number>(1);
-    const [businessHours, setBusinessHours] = useState<Array<{ start: string; end: string }>>([]);
+    const [businessHours, setBusinessHours] = useState<
+        Array<{ start: string; end: string }>
+    >([]);
 
     // 3) 生スパン (フィルタ前)
     const [rawSpans, setRawSpans] = useState<SeatFirstSpan[]>([]);
 
     // 4) グリッド時間リストと可用性判定
-    const [slots, setSlots] = useState<Array<{ time: string; available: boolean }>>([]);
+    const [slots, setSlots] = useState<
+        Array<{ time: string; available: boolean }>
+    >([]);
 
-    // API 呼び出し
+    // ──────────────────────────────────────────────────
+    // API 呼び出し：日別可用性取得
     useEffect(() => {
         if (isNaN(sid) || !date) return;
+
         fetchAvailabilityDay(sid, date, partySize)
             .then((res) => {
                 const body = res.data as AvailabilityDayResponse;
@@ -49,11 +59,13 @@ export default function ReserveTimePage() {
     // スロット計算
     useEffect(() => {
         if (!businessHours.length) return;
+
         const newSlots: Array<{ time: string; available: boolean }> = [];
 
         businessHours.forEach(({ start, end }) => {
             const sMin = parseTime(start);
             const eMin = parseTime(end);
+
             for (let t = sMin; t + standardMinutes <= eMin; t += gridUnit) {
                 const hh = String(Math.floor(t / 60)).padStart(2, '0');
                 const mm = String(t % 60).padStart(2, '0');
@@ -78,27 +90,26 @@ export default function ReserveTimePage() {
     const handleSelect = async (time: string) => {
         if (!slots.find((s) => s.time === time)?.available) return;
 
-        // 1) 次のステップ取得
-        const res = await fetchNextStep(sid);
-        const { nextStep } = res.data;
+        try {
+            const { data } = await fetchNextStepFlags(sid);
+            const { allowCourseSelection, allowSeatSelection } =
+                data as NextStepFlags;
 
-        // 2) 遷移先を動的に選択
-        switch (nextStep) {
-            case 'course':
+            if (allowCourseSelection) {
                 router.push(
                     `/store/${sid}/reserve/${date}/course?time=${time}&partySize=${partySize}`
                 );
-                break;
-            case 'seat':
+            } else if (allowSeatSelection) {
                 router.push(
                     `/store/${sid}/reserve/${date}/select?time=${time}&partySize=${partySize}`
                 );
-                break;
-            default:
+            } else {
                 router.push(
                     `/store/${sid}/reserve/${date}/info?time=${time}&partySize=${partySize}`
                 );
-                break;
+            }
+        } catch (e) {
+            console.error('次のステップ取得失敗:', e);
         }
     };
 
@@ -132,7 +143,9 @@ export default function ReserveTimePage() {
                 {slots.map(({ time, available }) => (
                     <li
                         key={time}
-                        className={`p-2 border text-center rounded cursor-pointer ${available ? 'bg-green-100 hover:bg-green-200' : 'bg-gray-200 cursor-not-allowed'
+                        className={`p-2 border text-center rounded cursor-pointer ${available
+                                ? 'bg-green-100 hover:bg-green-200'
+                                : 'bg-gray-200 cursor-not-allowed'
                             }`}
                         onClick={() => handleSelect(time)}
                     >

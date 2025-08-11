@@ -85,16 +85,18 @@ export async function fetchCourseMonthlyAvailability(
 }
 
 /** 指定日時で利用可能なコース一覧取得 */
-export async function fetchAvailableCourses(
+export const fetchAvailableCourses = (
     storeId: number,
     date: string,
-    time: string
-): Promise<AvailableCoursesResponseDto> {
-    const res = await api.get<AvailableCoursesResponseDto>(
-        `/stores/${storeId}/courses/availability?date=${date}&time=${time}`
+    time: string,
+    partySize: number,
+) =>
+    api.get<AvailableCoursesResponseDto>(
+        `/stores/${storeId}/courses/availability` +
+        `?date=${date}` +
+        `&time=${time}` +
+        `&count=${partySize}`
     );
-    return res.data;
-}
 
 /** 特別日スケジュールグループ作成 */
 export async function createSpecialCourseScheduleGroup(
